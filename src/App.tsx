@@ -84,8 +84,10 @@ export default function App() {
       setSessions(allSessions);
       
       const rawUsers: any[] = userRes.data.users || userRes.data || [];
+      const usersOnline: any[] = onlineRes.data.usersOnline || [];
       const userMap: Record<string, string> = {};
       rawUsers.forEach((u: any) => { userMap[u.id] = u.username; });
+      usersOnline.forEach((u: any) => { if (!userMap[u.id]) userMap[u.id] = u.username; });
 
       const STALE_THRESHOLD = 10 * 60 * 1000;
       const isRecentlyActive = (s: any) => {
@@ -102,7 +104,21 @@ export default function App() {
       setActiveSessions(openSessions);
       
       const items = recentRes.data.results || recentRes.data || [];
-      setBooks(items);
+      // Transform Audiobookshelf API response to match Book type
+      const transformedBooks: Book[] = items.map((item: any) => {
+        const mediaMeta = item.media?.metadata || item.metadata || { title: "Unknown Title", authorName: "Unknown Author" };
+        return {
+          id: item.id,
+          libraryId: item.libraryId,
+          metadata: {
+            title: mediaMeta.title,
+            authorName: mediaMeta.authorName,
+            coverPath: `/metadata/items/${item.id}/cover.jpg`,
+          },
+          addedAt: item.addedAt,
+        };
+      });
+      setBooks(transformedBooks);
       setTotalBooks(recentRes.data.totalBooks || 0);
     } catch (err: any) {
       console.error(err);
@@ -122,6 +138,8 @@ export default function App() {
         const onlineRes = await axios.get("/api/abs/users/online");
         const onlineUserMap: Record<string, string> = {};
         (onlineRes.data.usersOnline || []).forEach((u: any) => { onlineUserMap[u.id] = u.username; });
+        // Merge with existing userMap from state
+        users.forEach(u => { if (!onlineUserMap[u.id]) onlineUserMap[u.id] = u.username; });
         const STALE_THRESHOLD = 10 * 60 * 1000;
         const isRecentlyActive = (s: any) => {
           if (s.updatedAt) return (Date.now() - s.updatedAt) < STALE_THRESHOLD;
@@ -148,6 +166,11 @@ export default function App() {
     const userMap: Record<string, string> = {};
     users.forEach(u => { userMap[u.id] = u.username; });
 
+    // Track hour distribution and completion for each user
+    const hourDistribution: Record<string, number[]> = {};
+    const completionData: Record<string, { listened: number; total: number }> = {};
+    const firstSession: Record<string, number> = {};
+
     sessions.forEach(session => {
       if (!statsMap[session.userId]) {
         statsMap[session.userId] = {
@@ -155,22 +178,74 @@ export default function App() {
           username: userMap[session.userId] || session.username || session.userId,
           totalTime: 0,
           avgDaily: 0,
-          activity: {}
+          activity: {},
+          joinedAt: session.startedAt,
+          preferredTime: "",
+          completionRate: 0,
+          deviceUsage: "Web Client",
+          topGenre: "Mixed"
         };
+        hourDistribution[session.userId] = new Array(24).fill(0);
+        completionData[session.userId] = { listened: 0, total: 0 };
+        firstSession[session.userId] = session.startedAt;
+      }
+
+      // Track earliest session as join date proxy
+      if (session.startedAt < firstSession[session.userId]) {
+        firstSession[session.userId] = session.startedAt;
       }
 
       const dateStr = format(session.startedAt, "yyyy-MM-dd");
       const listeningTime = session.timeListening || session.duration || 0;
       statsMap[session.userId].totalTime += listeningTime;
       statsMap[session.userId].activity[dateStr] = (statsMap[session.userId].activity[dateStr] || 0) + listeningTime;
+
+      // Track hour distribution
+      const hour = new Date(session.startedAt).getHours();
+      hourDistribution[session.userId][hour]++;
+
+      // Track completion rate
+      if (session.duration && session.duration > 0) {
+        completionData[session.userId].listened += session.timeListening || 0;
+        completionData[session.userId].total += session.duration;
+      }
     });
 
     return Object.values(statsMap).map(user => {
       const activeDays = Object.keys(user.activity).length;
       user.avgDaily = activeDays > 0 ? user.totalTime / activeDays : 0;
+      user.joinedAt = firstSession[user.userId];
+
+      // Calculate preferred time from hour distribution
+      const hours = hourDistribution[user.userId];
+      if (hours) {
+        const maxCount = Math.max(...hours);
+        const peakHour = hours.indexOf(maxCount);
+        if (maxCount > 0) {
+          const label = getTimeLabel(peakHour);
+          user.preferredTime = `${label} (${peakHour}:00-${peakHour + 1}:00)`;
+        } else {
+          user.preferredTime = "Varies";
+        }
+      }
+
+      // Calculate completion rate
+      const comp = completionData[user.userId];
+      if (comp && comp.total > 0) {
+        user.completionRate = Math.round((comp.listened / comp.total) * 100);
+      }
+
       return user;
     }).sort((a, b) => b.totalTime - a.totalTime);
   }, [sessions, users]);
+
+  // Helper to format time preference
+  function getTimeLabel(hour: number): string {
+    if (hour >= 5 && hour < 12) return "Morning";
+    if (hour >= 12 && hour < 17) return "Afternoon";
+    if (hour >= 17 && hour < 21) return "Evening";
+    return "Night";
+  }
 
   if (loading) {
     return (

@@ -25,14 +25,14 @@ export function RecentItems({ items }: RecentItemsProps) {
             </div>
           ) : (
             items.slice(0, 5).map((book) => (
-              <div key={book.id} className="flex gap-3 p-1.5 rounded-xl transition-all hover:bg-slate-50 cursor-pointer group">
-                <div className="w-10 h-14 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 shadow-sm border border-slate-200 relative">
+              <div key={book.id} className="flex gap-3 p-1.5 rounded-xl cursor-pointer group">
+                <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 shadow-sm border border-slate-200 relative">
                   {book.metadata?.coverPath ? (
                     <img 
                       src={book.metadata.coverPath} 
                       alt={book.metadata.title || "Book cover"} 
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover"
                       onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
                   ) : (
@@ -52,7 +52,7 @@ export function RecentItems({ items }: RecentItemsProps) {
                     <span className="text-[9px] text-indigo-500 font-bold uppercase tracking-tighter">
                       {book.addedAt ? `Added ${formatDistanceToNow(book.addedAt)} ago` : 'Date unknown'}
                     </span>
-                    <ChevronRight size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                    <ChevronRight size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                   </div>
                 </div>
               </div>

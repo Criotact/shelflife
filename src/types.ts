@@ -50,4 +50,9 @@ export interface UserStats {
   totalTime: number;
   avgDaily: number;
   activity: Record<string, number>; // date string -> seconds
+  joinedAt: number;
+  preferredTime: string;
+  completionRate: number;
+  deviceUsage: string;
+  topGenre: string;
 }

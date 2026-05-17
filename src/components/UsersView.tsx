@@ -151,7 +151,7 @@ export function UsersView({ users, sessions, userStats }: UsersViewProps) {
                     </div>
                     <div className="flex items-center gap-1.5 text-slate-500">
                       <Calendar size={12} />
-                      <span className="text-[10px] font-bold">Joined {format(subDays(new Date(), 45), "MMM yyyy")}</span>
+                      <span className="text-[10px] font-bold">Joined {selectedUserStats?.joinedAt ? format(selectedUserStats.joinedAt, "MMM yyyy") : "Unknown"}</span>
                     </div>
                   </div>
                 </div>
@@ -187,10 +187,10 @@ export function UsersView({ users, sessions, userStats }: UsersViewProps) {
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2">
                 <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight mb-2">Listener Profile</h3>
                 {[
-                  { label: "Top Genre", value: "Science Fiction", icon: Music },
-                  { label: "Preferred Time", value: "Evening (8-10 PM)", icon: Clock },
-                  { label: "Device Usage", value: "iOS / Web Client", icon: LayoutGrid },
-                  { label: "Completion Rate", value: "84%", icon: TrendingUp },
+                  { label: "Top Genre", value: selectedUserStats?.topGenre || "Mixed", icon: Music },
+                  { label: "Preferred Time", value: selectedUserStats?.preferredTime || "Varies", icon: Clock },
+                  { label: "Device Usage", value: selectedUserStats?.deviceUsage || "Web Client", icon: LayoutGrid },
+                  { label: "Completion Rate", value: `${selectedUserStats?.completionRate || 0}%`, icon: TrendingUp },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-2">
