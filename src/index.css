@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-indigo-600: #6366f1;
+  --color-indigo-500: #818cf8;
+}
+
+html.dark {
+  --color-indigo-600: #5c6ea3;
+  --color-indigo-500: #7184bc;
+  --color-indigo-400: #8a9cc7;
+  
+  --color-slate-950: #1a2034;
+  --color-slate-900: #202940;
+  --color-slate-800: #2d3755;
+  --color-slate-700: #3d496a;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-900 font-sans antialiased transition-colors duration-300;
+  }
+  
+  html.dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Audiobookshelf Dashboard",
+  "description": "A comprehensive dashboard for monitoring Audiobookshelf library statistics and user listening activity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
