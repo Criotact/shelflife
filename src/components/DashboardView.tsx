@@ -24,16 +24,13 @@ interface DashboardViewProps {
   userStats: UserStats[];
   libraries: Library[];
   activeSessions: Session[];
-  darkMode: boolean;
 }
 
 export function DashboardView({ 
-  recentBooks, totalBooks, sessions, userStats, libraries, activeSessions, darkMode 
+  recentBooks, totalBooks, sessions, userStats, libraries, activeSessions 
 }: DashboardViewProps) {
   
-  const COLORS = darkMode 
-    ? ['#5c6ea3', '#0d9488', '#d97706', '#dc2626', '#7c3aed'] // Muted variations for dark mode
-    : ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const lineChartData = useMemo(() => {
     const activity: Record<string, number> = {};
@@ -77,40 +74,40 @@ export function DashboardView({
       </div>
 
       {/* Current Activity Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">Live Playback</h3>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Live Playback</h3>
             <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Direct stream activity</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {activeSessions.map((session) => (
-            <div key={session.id} className="p-3 rounded-xl border border-indigo-50 dark:border-indigo-900/30 bg-indigo-50/20 dark:bg-indigo-900/20 flex flex-col gap-2 relative overflow-hidden group">
+            <div key={session.id} className="p-3 rounded-xl border border-indigo-100 bg-indigo-50/40 flex flex-col gap-2 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-125 transition-transform">
-                <Activity size={32} className="text-indigo-600 dark:text-indigo-400" />
+                <Activity size={32} className="text-indigo-600" />
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 overflow-hidden">
                   <UserIcon size={14} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">{session.username}</p>
-                  <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">Now Listening</p>
+                  <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{session.username}</p>
+                  <p className="text-[9px] text-indigo-600 font-semibold uppercase">Now Listening</p>
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{session.displayTitle || session.mediaItemTitle}</p>
+                <p className="text-xs font-semibold text-slate-800 truncate">{session.displayTitle || session.mediaItemTitle}</p>
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="text-[9px] font-medium text-slate-500">Live for {formatDuration(Date.now() / 1000 - session.startedAt / 1000)}</p>
                   {session.progress !== undefined && (
-                    <p className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400">{Math.round(session.progress * 100)}%</p>
+                    <p className="text-[9px] font-bold text-indigo-600">{Math.round(session.progress * 100)}%</p>
                   )}
                 </div>
               </div>
-              <div className="w-full bg-indigo-100 dark:bg-indigo-900/40 rounded-full h-0.5 mt-1">
+              <div className="w-full bg-indigo-100 rounded-full h-0.5 mt-1">
                 <div 
-                  className="bg-indigo-600 dark:bg-indigo-500 h-0.5 rounded-full animate-pulse transition-all duration-1000" 
+                  className="bg-indigo-600 h-0.5 rounded-full animate-pulse transition-all duration-1000" 
                   style={{ width: `${(session.progress || 0) * 100}%` }}
                 ></div>
               </div>
@@ -125,22 +122,22 @@ export function DashboardView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">Listening History</h3>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Listening History</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Global hours consumed</p>
             </div>
           </div>
           <div className="h-[240px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={darkMode ? "#2d3755" : "#f1f5f9"} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} dy={5} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: darkMode ? '#2d3755' : '#fff', 
+                    backgroundColor: '#fff', 
                     borderRadius: '8px', 
                     border: 'none', 
                     boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
@@ -148,14 +145,14 @@ export function DashboardView({
                     fontWeight: '600'
                   }}
                 />
-                <Line type="monotone" dataKey="hours" stroke={darkMode ? "#7184bc" : "#6366f1"} strokeWidth={2} dot={{ r: 3, fill: darkMode ? '#7184bc' : '#6366f1', strokeWidth: 1.5, stroke: darkMode ? '#202940' : '#fff' }} activeDot={{ r: 5, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="hours" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: '#fff' }} activeDot={{ r: 5, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight mb-4">Content Distribution</h3>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight mb-4">Content Distribution</h3>
           <div className="h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -164,7 +161,7 @@ export function DashboardView({
                   </Pie>
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: darkMode ? '#2d3755' : '#fff', 
+                      backgroundColor: '#fff', 
                       borderRadius: '8px', 
                       border: 'none', 
                       boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
@@ -177,12 +174,12 @@ export function DashboardView({
           </div>
           <div className="space-y-1.5 mt-2">
             {libraryDistribution.map((item, idx) => (
-              <div key={item.name} className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <div key={item.name} className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
-                  <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">{item.name}</span>
+                  <span className="text-[10px] font-semibold text-slate-600">{item.name}</span>
                 </div>
-                <span className="text-[10px] font-bold text-slate-900 dark:text-white">{item.value} items</span>
+                <span className="text-[10px] font-bold text-slate-900">{item.value} items</span>
               </div>
             ))}
           </div>
@@ -190,20 +187,20 @@ export function DashboardView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
           <div className="flex items-center justify-between mb-4 px-2">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">Recent Additions</h3>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Recent Additions</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Latest library items</p>
             </div>
           </div>
           <RecentItems items={recentBooks} />
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
           <div className="flex items-center justify-between mb-4 px-2">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">Top Listeners</h3>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Listeners</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Engagement leaderboard</p>
             </div>
           </div>
@@ -211,7 +208,7 @@ export function DashboardView({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
         <ActivityHeatmap 
           title="Global Activity Intensity" 
           data={sessions.reduce((acc, s) => {

@@ -10,8 +10,6 @@ import {
   User as UserIcon,
   Menu,
   X,
-  Sun,
-  Moon,
   AlertCircle,
   RefreshCcw
 } from "lucide-react";
@@ -43,7 +41,6 @@ const NAV_ITEMS = [
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   // Data state
   const [libraries, setLibraries] = useState<Library[]>([]);
@@ -145,15 +142,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Apply dark mode to document root
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
   // Aggregate User Stats for both Dashboard and Users View
   const userStats = useMemo(() => {
     const statsMap: Record<string, UserStats> = {};
@@ -186,10 +174,10 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-center">
           <Activity className="animate-spin mb-4 text-indigo-600 mx-auto" size={48} />
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">Synchronizing Dashboard...</h2>
+          <h2 className="text-xl font-bold text-slate-800">Synchronizing Dashboard...</h2>
           <p className="text-slate-500 mt-2 text-sm font-medium">Hold on, we're fetching your audiobooks data.</p>
         </div>
       </div>
@@ -198,18 +186,18 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-10 text-center">
-          <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-200 p-10 text-center">
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle size={40} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Configuration Required</h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">Configuration Required</h2>
+          <p className="text-slate-600 mb-8 leading-relaxed">
             {error}
           </p>
           <div className="space-y-3">
             <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Steps to fix:</p>
-            <ol className="text-left text-sm text-slate-600 dark:text-slate-500 space-y-2 list-decimal list-inside">
+            <ol className="text-left text-sm text-slate-600 space-y-2 list-decimal list-inside">
               <li>Open the <strong>Secrets</strong> panel or <code>.env</code> file.</li>
               <li>Add <code>ABS_URL</code> with your server address.</li>
               <li>Add <code>ABS_TOKEN</code> with your API token.</li>
@@ -222,13 +210,13 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-100 text-slate-900 flex selection:bg-indigo-100 selection:text-indigo-900">
       {/* Sidebar - Desktop Only */}
-      <aside className="hidden lg:flex h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-col sticky top-0 z-50 shrink-0 w-[240px]">
+      <aside className="hidden lg:flex h-screen border-r border-slate-200 bg-white flex-col sticky top-0 z-50 shrink-0 w-[240px]">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold italic shadow-md shadow-indigo-100 dark:shadow-none ring-2 ring-indigo-50 dark:ring-indigo-900/20">S</div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Shelf<span className="text-indigo-600">Life</span></h1>
+            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold italic shadow-md shadow-indigo-100 ring-2 ring-indigo-50">S</div>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900">Shelf<span className="text-indigo-600">Life</span></h1>
           </div>
           
           <nav className="space-y-1">
@@ -239,8 +227,8 @@ export default function App() {
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-tight transition-all",
                   activeTab === item.id 
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 dark:shadow-none' 
-                    : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                    : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'
                 )}
               >
                 <item.icon size={16} />
@@ -254,55 +242,48 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-grow flex flex-col min-h-screen min-w-0 pb-20 lg:pb-0">
         {/* Top Header */}
-        <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
+        <header className="h-14 border-b border-slate-200 bg-white/80 backdrop-blur-xl sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex lg:hidden items-center gap-2 mr-2">
               <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">S</div>
-              <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">Shelf<span className="text-indigo-600">Life</span></h1>
+              <h1 className="text-sm font-bold tracking-tight text-slate-900">Shelf<span className="text-indigo-600">Life</span></h1>
             </div>
-            <div className="hidden sm:flex items-center gap-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 px-4 py-1.5 rounded-xl w-64 md:w-80 group focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-900/40 transition-all">
+            <div className="hidden sm:flex items-center gap-3 bg-white border border-slate-200 px-4 py-1.5 rounded-xl w-64 md:w-80 group focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
               <Search size={14} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
               <input 
                 type="text" 
                 placeholder="Query database..." 
-                className="bg-transparent border-none text-[11px] font-medium focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 dark:text-white"
+                className="bg-transparent border-none text-[11px] font-medium focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
-              className="sm:hidden p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500"
+              className="sm:hidden p-2 bg-white border border-slate-200 rounded-lg text-slate-500"
             >
               <Search size={18} />
             </button>
             <button 
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
-              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button 
               onClick={() => fetchData()}
               disabled={refreshing}
-              className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm disabled:opacity-50"
+              className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
               title="Refresh Data"
             >
               <RefreshCcw size={18} className={cn(refreshing && "animate-spin")} />
             </button>
-            <button className="relative p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
+            <button className="relative p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm">
               <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+            <div className="h-6 w-px bg-slate-200"></div>
             <div className="flex items-center gap-3 cursor-pointer group">
               <div className="text-right hidden sm:block">
-                <p className="text-[11px] font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">SUPER_ADMIN</p>
+                <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">SUPER_ADMIN</p>
                 <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-tight">Root Node Access</p>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-white dark:bg-indigo-900/20 flex items-center justify-center border-2 border-slate-200 dark:border-slate-900 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
-                <UserIcon size={16} className="text-indigo-600 dark:text-indigo-400" />
+              <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center border-2 border-slate-200 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
+                <UserIcon size={16} className="text-indigo-600" />
               </div>
             </div>
           </div>
@@ -326,7 +307,6 @@ export default function App() {
                   userStats={userStats}
                   libraries={libraries}
                   activeSessions={activeSessions}
-                  darkMode={darkMode}
                 />
               )}
               {activeTab === 'users' && (
@@ -334,7 +314,6 @@ export default function App() {
                   users={users}
                   sessions={sessions}
                   userStats={userStats}
-                  darkMode={darkMode}
                 />
               )}
               {activeTab === 'library' && (
@@ -344,18 +323,15 @@ export default function App() {
                 />
               )}
               {activeTab === 'settings' && (
-                <SettingsView 
-                  darkMode={darkMode}
-                  onToggleDarkMode={() => setDarkMode(!darkMode)}
-                />
+                <SettingsView />
               )}
               {activeTab === 'activity' && (
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 border-dashed p-12 text-center text-slate-400 flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center">
+                <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-12 text-center text-slate-400 flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
                     <Activity size={32} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">{activeTab} node pending</h3>
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{activeTab} node pending</h3>
                     <p className="text-sm font-medium">This module is part of the next rollout phase. Root access verified.</p>
                   </div>
                 </div>
@@ -364,7 +340,7 @@ export default function App() {
           </AnimatePresence>
         </section>
         {/* Bottom Navigation - Mobile Only */}
-        <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-2xl z-50 p-2 flex items-center justify-around">
+        <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-white/90 backdrop-blur-xl border border-slate-200/50 rounded-2xl shadow-2xl z-50 p-2 flex items-center justify-around">
           {NAV_ITEMS.map(item => (
             <button
               key={item.id}
@@ -372,14 +348,14 @@ export default function App() {
               className={cn(
                 "flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-xl transition-all relative",
                 activeTab === item.id 
-                  ? 'text-indigo-600 dark:text-indigo-400' 
+                  ? 'text-indigo-600' 
                   : 'text-slate-400'
               )}
             >
               {activeTab === item.id && (
                 <motion.div 
                   layoutId="bottomNavTab"
-                  className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl -z-10"
+                  className="absolute inset-0 bg-indigo-50 rounded-xl -z-10"
                 />
               )}
               <item.icon size={20} />

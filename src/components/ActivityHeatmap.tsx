@@ -25,21 +25,21 @@ export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
   };
 
   const levelStyles = [
-    "bg-slate-100 dark:bg-slate-800", // heatmap-0
-    "bg-indigo-100 dark:bg-indigo-900/30", // heatmap-1
-    "bg-indigo-300 dark:bg-indigo-700/50", // heatmap-2
-    "bg-indigo-500 dark:bg-indigo-500", // heatmap-3
-    "bg-indigo-700 dark:bg-indigo-400", // heatmap-4
+    "bg-slate-100", // heatmap-0
+    "bg-indigo-100", // heatmap-1
+    "bg-indigo-300", // heatmap-2
+    "bg-indigo-500", // heatmap-3
+    "bg-indigo-700", // heatmap-4
   ];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-tight">{title}</h2>
+          <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-tight">{title}</h2>
           <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Playback intensity over the last 12 months</p>
         </div>
-        <div className="flex gap-3 items-center bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="flex gap-3 items-center bg-slate-50 px-2 py-1 rounded-lg border border-slate-200">
           <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Quiet</span>
           <div className="flex gap-1">
             {levelStyles.map((style, i) => (

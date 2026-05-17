@@ -17,20 +17,20 @@ export function StatsCard({ title, value, icon: Icon, description, className }: 
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -1, transition: { duration: 0.2 } }}
       className={cn(
-        "bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-shadow hover:shadow-md",
+        "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md",
         className
       )}
     >
       <div className="flex justify-between items-start mb-2">
         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{title}</span>
-        <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+        <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
           <Icon size={14} />
         </div>
       </div>
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{value}</span>
+        <span className="text-2xl font-bold tracking-tight text-slate-900">{value}</span>
         {description && description.includes("+") && (
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-md">
+          <span className="text-[10px] text-emerald-600 font-bold px-1.5 py-0.5 bg-emerald-50 rounded-md">
             {description.split(' ')[0]}
           </span>
         )}
