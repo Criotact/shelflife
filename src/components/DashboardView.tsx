@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { 
   Activity, Play, User as UserIcon,
-  ChevronDown, ChevronRight
+  ChevronDown, ChevronRight, PenTool, Compass, Tags, Search
 } from "lucide-react";
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -14,7 +14,7 @@ import {
 
 import { UserStatsList } from "./UserStatsList";
 import { RecentItems } from "./RecentItems";
-import { formatDuration } from "../lib/utils";
+import { formatDuration, cn } from "../lib/utils";
 import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
 
@@ -39,6 +39,12 @@ export function DashboardView({
   const [selectedBookForDetails, setSelectedBookForDetails] = useState<Book | null>(null);
   const [initialModalTab, setInitialModalTab] = useState<'details' | 'match' | 'chapters'>('details');
   
+  // States for search and dynamic graph selection
+  const [livePlaybackSearch, setLivePlaybackSearch] = useState("");
+  const [recentActivitySearch, setRecentActivitySearch] = useState("");
+  const [graphUserSearch, setGraphUserSearch] = useState("");
+  const [selectedGraphUserIds, setSelectedGraphUserIds] = useState<string[]>([]);
+  
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const filteredSessions = useMemo(() => {
@@ -48,6 +54,88 @@ export function DashboardView({
   }, [sessions, timeframe]);
 
   const topUsers = useMemo(() => userStats.slice(0, 5), [userStats]);
+
+  // Sync selectedGraphUserIds with top users once loaded, if currently empty
+  useEffect(() => {
+    if (selectedGraphUserIds.length === 0 && userStats.length > 0) {
+      setSelectedGraphUserIds(userStats.slice(0, 5).map(u => u.userId));
+    }
+  }, [userStats, selectedGraphUserIds]);
+
+  const selectedUsersForChart = useMemo(() => {
+    if (selectedGraphUserIds.length === 0) {
+      return userStats.slice(0, 5);
+    }
+    return userStats.filter(u => selectedGraphUserIds.includes(u.userId));
+  }, [userStats, selectedGraphUserIds]);
+
+  const filteredActiveSessions = useMemo(() => {
+    if (!livePlaybackSearch.trim()) return activeSessions;
+    const query = livePlaybackSearch.toLowerCase();
+    return activeSessions.filter(s => {
+      const username = (s.username || "").toLowerCase();
+      const title = (s.displayTitle || s.mediaItemTitle || "").toLowerCase();
+      return username.includes(query) || title.includes(query);
+    });
+  }, [activeSessions, livePlaybackSearch]);
+
+  const topAuthors = useMemo(() => {
+    const authorTimeMap: Record<string, number> = {};
+    filteredSessions.forEach(session => {
+      const author = (session as any).mediaMetadata?.authorName || 
+                     (session as any).mediaMetadata?.author || 
+                     (session as any).displayAuthor ||
+                     "Unknown Author";
+      const listeningTime = session.timeListening || session.duration || 0;
+      authorTimeMap[author] = (authorTimeMap[author] || 0) + listeningTime;
+    });
+
+    return Object.entries(authorTimeMap)
+      .map(([name, time]) => ({ name, time }))
+      .sort((a, b) => b.time - a.time)
+      .slice(0, 5);
+  }, [filteredSessions]);
+
+  const topGenres = useMemo(() => {
+    const genreTimeMap: Record<string, number> = {};
+    filteredSessions.forEach(session => {
+      const genres = (session as any).mediaMetadata?.genres || 
+                     (session as any).mediaMetadata?.genre || 
+                     [];
+      const listeningTime = session.timeListening || session.duration || 0;
+      
+      if (Array.isArray(genres)) {
+        genres.forEach((g: string) => {
+          if (g) {
+            genreTimeMap[g] = (genreTimeMap[g] || 0) + listeningTime;
+          }
+        });
+      } else if (typeof genres === "string" && genres) {
+        genreTimeMap[genres] = (genreTimeMap[genres] || 0) + listeningTime;
+      }
+    });
+
+    return Object.entries(genreTimeMap)
+      .map(([name, time]) => ({ name, time }))
+      .sort((a, b) => b.time - a.time)
+      .slice(0, 5);
+  }, [filteredSessions]);
+
+  const getGenreStyle = (genre: string) => {
+    const styles = [
+      { bg: "from-pink-500 to-rose-500", text: "text-rose-600", lightBg: "bg-rose-50 border-rose-100", barBg: "bg-rose-500" },
+      { bg: "from-amber-500 to-orange-500", text: "text-orange-600", lightBg: "bg-orange-50 border-orange-100", barBg: "bg-orange-500" },
+      { bg: "from-emerald-500 to-teal-500", text: "text-emerald-600", lightBg: "bg-emerald-50 border-emerald-100", barBg: "bg-emerald-500" },
+      { bg: "from-blue-500 to-indigo-500", text: "text-indigo-600", lightBg: "bg-indigo-50 border-indigo-100", barBg: "bg-indigo-500" },
+      { bg: "from-violet-500 to-purple-500", text: "text-purple-600", lightBg: "bg-purple-50 border-purple-100", barBg: "bg-purple-500" },
+    ];
+    let hash = 0;
+    for (let i = 0; i < genre.length; i++) {
+      hash = genre.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % styles.length;
+    return styles[index];
+  };
 
   const lineChartData = useMemo(() => {
     const activity: Record<string, any> = {};
@@ -59,16 +147,16 @@ export function DashboardView({
       if (!activity[dateStr]) {
         activity[dateStr] = { date: dateStr, hours: 0 };
         if (chartView === 'users') {
-          topUsers.forEach(u => { activity[dateStr][u.username] = 0; });
+          selectedUsersForChart.forEach(u => { activity[dateStr][u.username] = 0; });
         }
       }
 
       if (chartView === 'total') {
         activity[dateStr].hours += listeningTime;
       } else {
-        const isTopUser = topUsers.find(u => u.userId === session.userId);
-        if (isTopUser) {
-          activity[dateStr][isTopUser.username] = (activity[dateStr][isTopUser.username] || 0) + listeningTime;
+        const isSelectedUser = selectedUsersForChart.find(u => u.userId === session.userId);
+        if (isSelectedUser) {
+          activity[dateStr][isSelectedUser.username] = (activity[dateStr][isSelectedUser.username] || 0) + listeningTime;
         }
       }
     });
@@ -79,14 +167,14 @@ export function DashboardView({
         if (chartView === 'total') {
           newEntry.hours = parseFloat(entry.hours.toFixed(1));
         } else {
-          topUsers.forEach(u => {
+          selectedUsersForChart.forEach(u => {
             newEntry[u.username] = parseFloat((entry[u.username] || 0).toFixed(1));
           });
         }
         return newEntry;
       })
       .sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredSessions, chartView, topUsers]);
+  }, [filteredSessions, chartView, selectedUsersForChart]);
 
   const hourlyActivityData = useMemo(() => {
     const cutoff = subDays(new Date(), 14).getTime();
@@ -97,7 +185,7 @@ export function DashboardView({
       const label = `${h.toString().padStart(2, '0')}:00`;
       activity[h] = { hour: h, label, hours: 0 };
       if (hourlyView === 'users') {
-        topUsers.forEach(u => {
+        selectedUsersForChart.forEach(u => {
           activity[h][u.username] = 0;
         });
       }
@@ -111,9 +199,9 @@ export function DashboardView({
       if (hourlyView === 'total') {
         activity[hour].hours += listeningTime;
       } else {
-        const isTopUser = topUsers.find(u => u.userId === session.userId);
-        if (isTopUser) {
-          activity[hour][isTopUser.username] = (activity[hour][isTopUser.username] || 0) + listeningTime;
+        const isSelectedUser = selectedUsersForChart.find(u => u.userId === session.userId);
+        if (isSelectedUser) {
+          activity[hour][isSelectedUser.username] = (activity[hour][isSelectedUser.username] || 0) + listeningTime;
         }
       }
     });
@@ -124,14 +212,14 @@ export function DashboardView({
         if (hourlyView === 'total') {
           newEntry.hours = parseFloat(entry.hours.toFixed(1));
         } else {
-          topUsers.forEach(u => {
+          selectedUsersForChart.forEach(u => {
             newEntry[u.username] = parseFloat((entry[u.username] || 0).toFixed(1));
           });
         }
         return newEntry;
       })
       .sort((a: any, b: any) => a.hour - b.hour);
-  }, [sessions, topUsers, hourlyView]);
+  }, [sessions, selectedUsersForChart, hourlyView]);
 
   const toggleUserExpanded = (userId: string) => {
     setExpandedUsers(prev => ({
@@ -207,6 +295,19 @@ export function DashboardView({
     return groupedList;
   }, [sessions, userStats]);
 
+  const filteredRecentActivityGrouped = useMemo(() => {
+    if (!recentActivitySearch.trim()) return last7DaysActivitiesGrouped;
+    const query = recentActivitySearch.toLowerCase();
+    return last7DaysActivitiesGrouped.filter(user => {
+      const username = (user.username || "").toLowerCase();
+      const matchUsername = username.includes(query);
+      const matchBooks = user.uniqueBooks.some(b => 
+        b.title.toLowerCase().includes(query)
+      );
+      return matchUsername || matchBooks;
+    });
+  }, [last7DaysActivitiesGrouped, recentActivitySearch]);
+
   const getSessionBookInfo = (session: Session) => {
     const title = session.displayTitle || session.mediaItemTitle || "Unknown Book";
     const matchedBook = recentBooks.find(b => b.metadata.title.toLowerCase() === title.toLowerCase());
@@ -228,17 +329,29 @@ export function DashboardView({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Live Playback Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[400px]">
-          <div className="flex items-center justify-between mb-4 px-2 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
                 Live Playback <span className="font-extrabold text-indigo-600">({activeSessions.length})</span>
               </h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Direct stream activity</p>
             </div>
+            {activeSessions.length > 5 && (
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all shrink-0">
+                <Search size={10} className="text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Filter streams..." 
+                  value={livePlaybackSearch}
+                  onChange={(e) => setLivePlaybackSearch(e.target.value)}
+                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
+                />
+              </div>
+            )}
           </div>
           
           <div className="flex-grow overflow-y-auto no-scrollbar flex flex-col gap-3 pr-1">
-            {activeSessions.map((session) => (
+            {filteredActiveSessions.map((session) => (
               <div key={session.id} className="p-3 rounded-xl border border-indigo-100 bg-indigo-50/40 flex flex-col gap-2 relative overflow-hidden group shrink-0">
                 <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-125 transition-transform">
                   <Activity size={32} className="text-indigo-600" />
@@ -269,14 +382,20 @@ export function DashboardView({
                 </div>
               </div>
             ))}
-            {activeSessions.length === 0 && (
+            {filteredActiveSessions.length === 0 && (
               <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-12 flex-grow">
                 <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
                   <Play size={18} className="text-slate-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Silence reigns</p>
-                  <p className="text-[8px] font-medium text-slate-400">No active sessions at the moment.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    {activeSessions.length === 0 ? "Silence reigns" : "No results"}
+                  </p>
+                  <p className="text-[8px] font-medium text-slate-400">
+                    {activeSessions.length === 0 
+                      ? "No active sessions at the moment." 
+                      : "No active sessions matching your query."}
+                  </p>
                 </div>
               </div>
             )}
@@ -285,11 +404,23 @@ export function DashboardView({
 
         {/* Recent Activity Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[400px]">
-          <div className="flex items-center justify-between mb-4 px-2 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Recent Activity (7 Days)</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Weekly user engagement & book summaries</p>
             </div>
+            {last7DaysActivitiesGrouped.length > 5 && (
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all shrink-0">
+                <Search size={10} className="text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Filter recent..." 
+                  value={recentActivitySearch}
+                  onChange={(e) => setRecentActivitySearch(e.target.value)}
+                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
+                />
+              </div>
+            )}
           </div>
           
           <div className="flex-grow overflow-y-auto no-scrollbar flex flex-col gap-3 pr-1">
@@ -321,7 +452,7 @@ export function DashboardView({
               ))
             ) : (
               <>
-                {last7DaysActivitiesGrouped.map((user) => {
+                {filteredRecentActivityGrouped.map((user) => {
                   const isCollapsed = !expandedUsers[user.userId];
                   return (
                     <div key={user.userId} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30">
@@ -397,14 +528,20 @@ export function DashboardView({
                   );
                 })}
 
-                {last7DaysActivitiesGrouped.length === 0 && (
+                {filteredRecentActivityGrouped.length === 0 && (
                   <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-12 flex-grow">
                     <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
                       <Activity size={18} className="text-slate-400" />
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Silence reigns</p>
-                      <p className="text-[8px] font-medium text-slate-400">No user activity recorded in the last 7 days.</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {last7DaysActivitiesGrouped.length === 0 ? "Silence reigns" : "No results"}
+                      </p>
+                      <p className="text-[8px] font-medium text-slate-400">
+                        {last7DaysActivitiesGrouped.length === 0 
+                          ? "No user activity recorded in the last 7 days." 
+                          : "No activity matching your query."}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -414,8 +551,99 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* Analytics and Additions Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Unified User Selector for Graphs */}
+      {(chartView === 'users' || hourlyView === 'users') && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 transition-all animate-fadeIn">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+            <div>
+              <h4 className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <UserIcon size={12} className="text-indigo-600" />
+                Select Listeners to Compare
+              </h4>
+              <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-widest mt-0.5">
+                Toggle up to <span className="font-extrabold text-indigo-600">6</span> listeners to plot on "By User" graphs.
+              </p>
+            </div>
+            
+            {/* Mini User Search if user count is high */}
+            {userStats.length > 8 && (
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-48 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all shrink-0">
+                <Search size={10} className="text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search listeners..." 
+                  value={graphUserSearch}
+                  onChange={(e) => setGraphUserSearch(e.target.value)}
+                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-2 px-2 scroll-smooth">
+            {userStats
+              .filter(user => 
+                !graphUserSearch.trim() || 
+                user.username.toLowerCase().includes(graphUserSearch.toLowerCase())
+              )
+              .map((user) => {
+                const isSelected = selectedGraphUserIds.includes(user.userId);
+                // Find index in selected users to get matching color
+                const colorIdx = selectedGraphUserIds.indexOf(user.userId);
+                const color = colorIdx !== -1 ? COLORS[colorIdx % COLORS.length] : null;
+                
+                return (
+                  <button
+                    key={user.userId}
+                    onClick={() => {
+                      if (isSelected) {
+                        // Prevent deselecting if it's the last one (keep at least 1)
+                        if (selectedGraphUserIds.length <= 1) return;
+                        setSelectedGraphUserIds(prev => prev.filter(id => id !== user.userId));
+                      } else {
+                        if (selectedGraphUserIds.length >= 6) {
+                          // Already at maximum
+                          return;
+                        }
+                        setSelectedGraphUserIds(prev => [...prev, user.userId]);
+                      }
+                    }}
+                    disabled={!isSelected && selectedGraphUserIds.length >= 6}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-all whitespace-nowrap active:scale-95",
+                      isSelected
+                        ? "bg-white text-slate-800 shadow-sm"
+                        : "bg-slate-50 text-slate-400 border-slate-200 hover:text-slate-700 hover:bg-slate-100/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    )}
+                    style={isSelected && color ? { borderColor: color, borderLeftWidth: '4px' } : undefined}
+                  >
+                    <span 
+                      className="w-1.5 h-1.5 rounded-full shrink-0" 
+                      style={{ backgroundColor: isSelected && color ? color : '#94a3b8' }}
+                    />
+                    {user.username}
+                  </button>
+                );
+              })}
+            {userStats.filter(user => 
+              !graphUserSearch.trim() || 
+              user.username.toLowerCase().includes(graphUserSearch.toLowerCase())
+            ).length === 0 && (
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest my-1">No matching listeners found</p>
+            )}
+          </div>
+          
+          {/* Warning banner when cap is reached */}
+          {selectedGraphUserIds.length >= 6 && (
+            <div className="text-[9px] text-amber-600 font-extrabold uppercase tracking-widest flex items-center gap-1 mt-1 animate-pulse">
+              ⚠️ Comparison limit reached (6 max). Deselect a listener to select another.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Listening History Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 overflow-hidden flex flex-col justify-between h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
@@ -525,9 +753,9 @@ export function DashboardView({
                         activeDot={{ r: 5, strokeWidth: 0 }} 
                       />
                     ) : (
-                      topUsers.map((user, idx) => (
+                      selectedUsersForChart.map((user, idx) => (
                         <Line 
-                          key={user.userId}
+                           key={user.userId}
                           type="monotone" 
                           dataKey={user.username} 
                           stroke={COLORS[idx % COLORS.length]} 
@@ -560,7 +788,7 @@ export function DashboardView({
                         radius={[4, 4, 0, 0]} 
                       />
                     ) : (
-                      topUsers.map((user, idx) => (
+                      selectedUsersForChart.map((user, idx) => (
                         <Bar 
                           key={user.userId}
                           dataKey={user.username} 
@@ -644,7 +872,7 @@ export function DashboardView({
                       radius={[3, 3, 0, 0]} 
                     />
                   ) : (
-                    topUsers.map((user, idx) => (
+                    selectedUsersForChart.map((user, idx) => (
                       <Bar 
                         key={user.userId}
                         dataKey={user.username} 
@@ -659,7 +887,9 @@ export function DashboardView({
             </div>
           )}
         </div>
+      </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
         {/* Recent Additions Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
@@ -676,6 +906,127 @@ export function DashboardView({
                 setInitialModalTab('details');
               }}
             />
+          </div>
+        </div>
+
+        {/* Most Listened Authors Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[360px]">
+          <div className="flex items-center justify-between mb-4 px-2 shrink-0">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Authors</h3>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Listening time by author</p>
+            </div>
+          </div>
+          <div className="flex-grow overflow-y-auto no-scrollbar pr-1 flex flex-col gap-3">
+            {topAuthors.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-16 flex-grow">
+                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+                  <PenTool size={18} className="text-slate-400" />
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No author data</p>
+                  <p className="text-[8px] font-medium text-slate-400">No listening logs found for this timeframe.</p>
+                </div>
+              </div>
+            ) : (
+              topAuthors.map((author) => {
+                const maxTime = topAuthors[0]?.time || 1;
+                const percent = Math.round((author.time / maxTime) * 100);
+                const initials = author.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase() || "??";
+                
+                return (
+                  <div key={author.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 hover:bg-slate-50/50 hover:border-slate-100 transition-all group select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                          {initials}
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                          {author.name}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-600 shrink-0">
+                        {formatDuration(author.time)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-grow bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-indigo-600 h-1.5 rounded-full transition-all duration-1000 group-hover:bg-indigo-500"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className="text-[8px] font-extrabold text-slate-400 w-6 text-right">
+                        {percent}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Most Listened Genres Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[360px]">
+          <div className="flex items-center justify-between mb-4 px-2 shrink-0">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Genres</h3>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Listening time by category</p>
+            </div>
+          </div>
+          <div className="flex-grow overflow-y-auto no-scrollbar pr-1 flex flex-col gap-3">
+            {topGenres.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-16 flex-grow">
+                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+                  <Compass size={18} className="text-slate-400" />
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No genre data</p>
+                  <p className="text-[8px] font-medium text-slate-400">No listening logs found for this timeframe.</p>
+                </div>
+              </div>
+            ) : (
+              topGenres.map((genre) => {
+                const maxTime = topGenres[0]?.time || 1;
+                const percent = Math.round((genre.time / maxTime) * 100);
+                const style = getGenreStyle(genre.name);
+                
+                return (
+                  <div key={genre.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 hover:bg-slate-50/50 hover:border-slate-100 transition-all group select-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={cn("w-8 h-8 rounded-full bg-gradient-to-tr text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform", style.bg)}>
+                          <Tags size={12} />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                          {genre.name}
+                        </span>
+                      </div>
+                      <span className={cn("text-[10px] font-bold shrink-0", style.text)}>
+                        {formatDuration(genre.time)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-grow bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className={cn("h-1.5 rounded-full transition-all duration-1000", style.barBg)}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className="text-[8px] font-extrabold text-slate-400 w-6 text-right">
+                        {percent}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
