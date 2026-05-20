@@ -66,7 +66,9 @@ export default function App() {
         desc: "1",
         bypassCache: isInitial ? undefined : "true"
       });
-      const allSessions = sessionRes.sessions || sessionRes || [];
+      const allSessions = sessionRes && Array.isArray(sessionRes.sessions) 
+        ? sessionRes.sessions 
+        : (Array.isArray(sessionRes) ? sessionRes : []);
       setSessions(allSessions);
     } catch (err) {
       console.error("Failed to fetch listening sessions:", err);
@@ -95,14 +97,23 @@ export default function App() {
         api.getOnlineUsers()
       ]);
 
-      setLibraries(libData.libraries || libData || []);
-      setUsers(userData.users || userData || []);
+      const libs = libData && Array.isArray(libData.libraries) 
+        ? libData.libraries 
+        : (Array.isArray(libData) ? libData : []);
+      setLibraries(libs);
+
+      const rawUsers = userData && Array.isArray(userData.users) 
+        ? userData.users 
+        : (Array.isArray(userData) ? userData : []);
+      setUsers(rawUsers);
       
-      const rawUsers: any[] = userData.users || userData || [];
-      const usersOnline: any[] = onlineData.usersOnline || [];
+      const usersOnline = onlineData && Array.isArray(onlineData.usersOnline) 
+        ? onlineData.usersOnline 
+        : (Array.isArray(onlineData) ? onlineData : []);
+
       const userMap: Record<string, string> = {};
-      rawUsers.forEach((u: any) => { userMap[u.id] = u.username; });
-      usersOnline.forEach((u: any) => { if (!userMap[u.id]) userMap[u.id] = u.username; });
+      rawUsers.forEach((u: any) => { if (u && u.id) userMap[u.id] = u.username || u.id; });
+      usersOnline.forEach((u: any) => { if (u && u.id && !userMap[u.id]) userMap[u.id] = u.username || u.id; });
 
       const STALE_THRESHOLD = 10 * 60 * 1000;
       const isRecentlyActive = (s: any) => {
@@ -180,15 +191,22 @@ export default function App() {
       try {
         const onlineData = await api.getOnlineUsers();
         const onlineUserMap: Record<string, string> = {};
-        (onlineData.usersOnline || []).forEach((u: any) => { onlineUserMap[u.id] = u.username; });
+        const onlineUsersArray = onlineData && Array.isArray(onlineData.usersOnline) 
+          ? onlineData.usersOnline 
+          : (Array.isArray(onlineData) ? onlineData : []);
+        onlineUsersArray.forEach((u: any) => { if (u && u.id) onlineUserMap[u.id] = u.username || u.id; });
         // Merge with existing userMap from state
-        users.forEach(u => { if (!onlineUserMap[u.id]) onlineUserMap[u.id] = u.username; });
+        if (Array.isArray(users)) {
+          users.forEach(u => { if (u && u.id && !onlineUserMap[u.id]) onlineUserMap[u.id] = u.username || u.id; });
+        }
         const STALE_THRESHOLD = 10 * 60 * 1000;
         const isRecentlyActive = (s: any) => {
+          if (!s) return false;
           if (s.updatedAt) return (Date.now() - s.updatedAt) < STALE_THRESHOLD;
           return (Date.now() - (s.startedAt + (s.timeListening || 0) * 1000)) < STALE_THRESHOLD;
         };
-        const openSessions = (onlineData.openSessions || [])
+        const openSessionsArray = onlineData && Array.isArray(onlineData.openSessions) ? onlineData.openSessions : [];
+        const openSessions = openSessionsArray
           .filter(isRecentlyActive)
           .map((s: any) => ({
             ...s,

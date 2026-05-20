@@ -63,9 +63,15 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
         }
 
         const loginRes = await axios.post(
-          `${formattedUrl}/api/login`,
+          `/api/abs/login`,
           { username, password },
-          { headers: { "Content-Type": "application/json" }, timeout: 8000 }
+          { 
+            headers: { 
+              "Content-Type": "application/json",
+              "X-ABS-URL": formattedUrl
+            }, 
+            timeout: 8000 
+          }
         );
 
         resolvedToken = loginRes.data?.user?.token;

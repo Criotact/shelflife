@@ -1,5 +1,13 @@
 {
   "appId": "com.example.shelflife",
   "appName": "ShelfLife",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }

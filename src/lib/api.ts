@@ -27,8 +27,9 @@ class ApiClient {
         isDirect: true,
       };
       this.client = axios.create({
-        baseURL: `${this.config.url}/api`,
+        baseURL: "/api/abs",
         headers: {
+          "X-ABS-URL": this.config.url,
           Authorization: `Bearer ${token}`,
         },
       });
@@ -71,7 +72,8 @@ class ApiClient {
   // Get cover path dynamically based on connection mode
   public getCoverPath(itemId: string): string {
     if (this.config?.isDirect && this.config.url) {
-      return `${this.config.url}/api/items/${itemId}/cover?token=${this.config.token}`;
+      const encodedUrl = encodeURIComponent(this.config.url);
+      return `/metadata/items/${itemId}/cover.jpg?absUrl=${encodedUrl}&token=${this.config.token}`;
     }
     return `/metadata/items/${itemId}/cover.jpg`;
   }
@@ -83,26 +85,15 @@ class ApiClient {
     }
 
     try {
-      if (this.config?.isDirect) {
-        // Direct mode: Ping raw ABS URL or try libraries endpoint to verify auth token
-        const pingUrl = `${this.config.url}/ping`;
-        try {
-          await axios.get(pingUrl, { timeout: 5000 });
-        } catch (e: any) {
-          return { ok: false, error: `Could not connect to host at ${this.config.url}. Please check URL.` };
-        }
-
-        // Test credentials by loading libraries
-        await this.client.get("/libraries", { timeout: 5000 });
-        return { ok: true };
-      } else {
-        // Proxy mode: Calls the Express backend's health route
-        const response = await this.client.get("/health");
-        if (response.data?.error) {
-          return { ok: false, error: response.data.error };
-        }
-        return { ok: true };
+      // Both modes call the Express backend's health route via proxy
+      const response = await this.client.get("/health");
+      if (response.data?.error) {
+        return { ok: false, error: `Could not connect to host at ${this.config?.url || 'Audiobookshelf'}. Error: ${response.data.error}` };
       }
+
+      // Test credentials/token by loading libraries
+      await this.client.get("/libraries", { timeout: 5000 });
+      return { ok: true };
     } catch (err: any) {
       console.error("Health check error:", err);
       const msg = err.response?.status === 401 

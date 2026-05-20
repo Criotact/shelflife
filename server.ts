@@ -22,31 +22,50 @@ async function startServer() {
   }
 
   // Helper function for the few routes we need to intercept
-  function getAbsApi() {
+  function getAbsApi(req: express.Request) {
+    const xAbsUrl = req.headers['x-abs-url'] || ABS_URL;
+    const clientAuth = req.headers['authorization'];
+    
+    const targetUrl = typeof xAbsUrl === 'string' && xAbsUrl.endsWith('/') ? xAbsUrl.slice(0, -1) : xAbsUrl;
+    
+    const headers: Record<string, string> = {};
+    if (clientAuth) {
+      headers['Authorization'] = typeof clientAuth === 'string' ? clientAuth : '';
+    } else if (ABS_TOKEN) {
+      headers['Authorization'] = `Bearer ${ABS_TOKEN}`;
+    }
+
     return axios.create({
-      baseURL: ABS_URL,
-      headers: {
-        'Authorization': `Bearer ${ABS_TOKEN}`
-      }
+      baseURL: targetUrl as string,
+      headers
     });
+  }
+
+  // Format dynamic proxy error messages nicely
+  function formatError(error: any): string {
+    const msg = error?.message || String(error);
+    if (msg.includes("EPROTO") || msg.includes("SSL routines") || msg.includes("tls_get_more_records") || msg.includes("WRONG_VERSION_NUMBER")) {
+      return "SSL/TLS Protocol Error: Attempted secure connection (https://) to a non-secure (http://) server. Please change the URL scheme to http://";
+    }
+    return msg;
   }
 
   // Custom proxy route for health check (ping)
   app.get("/api/abs/health", async (req, res) => {
     try {
-      const api = getAbsApi();
+      const api = getAbsApi(req);
       const response = await api.get("ping");
       res.json(response.data);
     } catch (error: any) {
       console.error("Health check failed:", error.message);
-      res.json({ error: error.message, status: error.response?.status });
+      res.json({ error: formatError(error), status: error.response?.status });
     }
   });
 
   // Custom proxy route for recent items (fetches from all libraries)
   app.get("/api/abs/recent", async (req, res) => {
     try {
-      const api = getAbsApi();
+      const api = getAbsApi(req);
       const libRes = await api.get("api/libraries");
       const libraries = libRes.data?.libraries || [];
       
@@ -72,12 +91,12 @@ async function startServer() {
       res.json({ results: sorted.slice(0, 10), totalBooks });
     } catch (error: any) {
       console.error("Failed to fetch recent items:", error.message);
-      res.status(error.response?.status || 500).json({ error: error.message });
+      res.status(error.response?.status || 500).json({ error: formatError(error) });
     }
   });
 
-  // In-memory cache for sessions standard query
-  let sessionsCache: { data: any; timestamp: number } | null = null;
+  // In-memory cache for sessions standard query, keyed by target URL
+  let sessionsCache: Record<string, { data: any; timestamp: number }> = {};
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   app.get("/api/abs/sessions", async (req, res) => {
@@ -86,15 +105,19 @@ async function startServer() {
       const isStandardQuery = itemsPerPage === "500" && sort === "startedAt" && desc === "1";
       const shouldBypass = bypassCache === "true";
 
-      if (isStandardQuery && !shouldBypass && sessionsCache && (Date.now() - sessionsCache.timestamp < CACHE_TTL)) {
-        return res.json(sessionsCache.data);
+      const xAbsUrl = req.headers['x-abs-url'] || ABS_URL;
+      const cacheKey = typeof xAbsUrl === 'string' ? xAbsUrl : 'default';
+      const cached = sessionsCache[cacheKey];
+
+      if (isStandardQuery && !shouldBypass && cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return res.json(cached.data);
       }
 
-      const api = getAbsApi();
+      const api = getAbsApi(req);
       const response = await api.get("api/sessions", { params: req.query });
 
       if (isStandardQuery) {
-        sessionsCache = {
+        sessionsCache[cacheKey] = {
           data: response.data,
           timestamp: Date.now()
         };
@@ -103,7 +126,7 @@ async function startServer() {
       res.json(response.data);
     } catch (error: any) {
       console.error("Failed to fetch sessions:", error.message);
-      res.status(error.response?.status || 500).json({ error: error.message });
+      res.status(error.response?.status || 500).json({ error: formatError(error) });
     }
   });
 
@@ -129,35 +152,70 @@ async function startServer() {
     }
   });
 
-  if (ABS_URL && ABS_TOKEN) {
-    // Proxy remaining API requests directly
-    app.use("/api/abs", createProxyMiddleware({
-      target: ABS_URL,
-      changeOrigin: true,
-      pathRewrite: {
-        '^/': '/api/'
-      },
-      on: {
-        proxyReq: (proxyReq) => {
+  // Always mount the proxy middleware so dynamic/direct connections from client can be proxied
+  app.use("/api/abs", createProxyMiddleware({
+    target: ABS_URL || "http://localhost:13378",
+    router: (req) => {
+      const xAbsUrl = req.headers['x-abs-url'];
+      if (typeof xAbsUrl === 'string' && xAbsUrl) {
+        return xAbsUrl.endsWith('/') ? xAbsUrl.slice(0, -1) : xAbsUrl;
+      }
+      return ABS_URL || undefined;
+    },
+    changeOrigin: true,
+    pathRewrite: {
+      '^/': '/api/'
+    },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        // If client sends Authorization header, keep it. Otherwise, use ABS_TOKEN if configured.
+        const clientAuth = req.headers['authorization'];
+        if (!clientAuth && ABS_TOKEN) {
           proxyReq.setHeader('Authorization', `Bearer ${ABS_TOKEN}`);
         }
+      },
+      error: (err, req, res: any) => {
+        console.error("Proxy error:", err.message);
+        const errorMsg = formatError(err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: errorMsg }));
       }
-    }));
+    }
+  }));
 
-    // Proxy metadata requests for covers/images
-    app.use("/metadata", createProxyMiddleware({
-      target: ABS_URL,
-      changeOrigin: true,
-      pathRewrite: {
-        '^/items/(.*)/cover.jpg': '/api/items/$1/cover'
-      },
-      on: {
-        proxyReq: (proxyReq) => {
+  // Proxy metadata requests for covers/images
+  app.use("/metadata", createProxyMiddleware({
+    target: ABS_URL || "http://localhost:13378",
+    router: (req) => {
+      const parsedUrl = new URL(req.url || "", "http://localhost");
+      const queryAbsUrl = parsedUrl.searchParams.get("absUrl");
+      if (queryAbsUrl) {
+        return queryAbsUrl.endsWith('/') ? queryAbsUrl.slice(0, -1) : queryAbsUrl;
+      }
+      return ABS_URL || undefined;
+    },
+    changeOrigin: true,
+    pathRewrite: {
+      '^/items/(.*)/cover.jpg': '/api/items/$1/cover'
+    },
+    on: {
+      proxyReq: (proxyReq, req) => {
+        const parsedUrl = new URL(req.url || "", "http://localhost");
+        const queryToken = parsedUrl.searchParams.get("token");
+        if (queryToken) {
+          proxyReq.setHeader('Authorization', `Bearer ${queryToken}`);
+        } else if (ABS_TOKEN) {
           proxyReq.setHeader('Authorization', `Bearer ${ABS_TOKEN}`);
         }
+      },
+      error: (err, req, res: any) => {
+        console.error("Metadata proxy error:", err.message);
+        const errorMsg = formatError(err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: errorMsg }));
       }
-    }));
-  }
+    }
+  }));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
