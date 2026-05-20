@@ -166,10 +166,12 @@ export default function App() {
     const userMap: Record<string, string> = {};
     users.forEach(u => { userMap[u.id] = u.username; });
 
-    // Track hour distribution and completion for each user
+    // Track hour distribution, completion, genres, and devices for each user
     const hourDistribution: Record<string, number[]> = {};
     const completionData: Record<string, { listened: number; total: number }> = {};
     const firstSession: Record<string, number> = {};
+    const genreCounts: Record<string, Record<string, number>> = {};
+    const deviceCounts: Record<string, Record<string, number>> = {};
 
     sessions.forEach(session => {
       if (!statsMap[session.userId]) {
@@ -188,6 +190,8 @@ export default function App() {
         hourDistribution[session.userId] = new Array(24).fill(0);
         completionData[session.userId] = { listened: 0, total: 0 };
         firstSession[session.userId] = session.startedAt;
+        genreCounts[session.userId] = {};
+        deviceCounts[session.userId] = {};
       }
 
       // Track earliest session as join date proxy
@@ -208,6 +212,23 @@ export default function App() {
       if (session.duration && session.duration > 0) {
         completionData[session.userId].listened += session.timeListening || 0;
         completionData[session.userId].total += session.duration;
+      }
+
+      // Track genres from raw metadata
+      const rawSession = session as any;
+      const genres = rawSession.mediaMetadata?.genres || [];
+      if (Array.isArray(genres)) {
+        genres.forEach((g: string) => {
+          if (g) {
+            genreCounts[session.userId][g] = (genreCounts[session.userId][g] || 0) + 1;
+          }
+        });
+      }
+
+      // Track client device usage
+      const clientName = rawSession.deviceInfo?.clientName;
+      if (clientName) {
+        deviceCounts[session.userId][clientName] = (deviceCounts[session.userId][clientName] || 0) + 1;
       }
     });
 
@@ -233,6 +254,34 @@ export default function App() {
       const comp = completionData[user.userId];
       if (comp && comp.total > 0) {
         user.completionRate = Math.round((comp.listened / comp.total) * 100);
+      }
+
+      // Calculate top genre dynamically
+      const userGenres = genreCounts[user.userId];
+      if (userGenres && Object.keys(userGenres).length > 0) {
+        let topG = "Mixed";
+        let maxGCount = 0;
+        Object.entries(userGenres).forEach(([genre, count]) => {
+          if (count > maxGCount) {
+            maxGCount = count;
+            topG = genre;
+          }
+        });
+        user.topGenre = topG;
+      }
+
+      // Calculate device usage dynamically
+      const userDevices = deviceCounts[user.userId];
+      if (userDevices && Object.keys(userDevices).length > 0) {
+        let topD = "Web Client";
+        let maxDCount = 0;
+        Object.entries(userDevices).forEach(([device, count]) => {
+          if (count > maxDCount) {
+            maxDCount = count;
+            topD = device;
+          }
+        });
+        user.deviceUsage = topD;
       }
 
       return user;
