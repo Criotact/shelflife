@@ -28,7 +28,6 @@ import { DashboardView } from "./components/DashboardView";
 import { UsersView } from "./components/UsersView";
 import { LibraryView } from "./components/LibraryView";
 import { SettingsView } from "./components/SettingsView";
-import { MOCK_USERS, MOCK_LIBRARIES, MOCK_BOOKS, MOCK_SESSIONS, MOCK_ACTIVE_SESSIONS } from "./mockData";
 import { cn } from "./lib/utils";
 
 const NAV_ITEMS = [
