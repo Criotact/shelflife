@@ -452,11 +452,6 @@ export default function App() {
 
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
-              className="sm:hidden p-2 bg-white border border-slate-200 rounded-lg text-slate-500"
-            >
-              <Search size={18} />
-            </button>
-            <button 
               onClick={() => fetchData()}
               disabled={refreshing}
               className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
@@ -464,20 +459,6 @@ export default function App() {
             >
               <RefreshCcw size={18} className={cn(refreshing && "animate-spin")} />
             </button>
-            <button className="relative p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm">
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
-            <div className="h-6 w-px bg-slate-200"></div>
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="text-right hidden sm:block">
-                <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">SUPER_ADMIN</p>
-                <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-tight">Root Node Access</p>
-              </div>
-              <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center border-2 border-slate-200 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
-                <UserIcon size={16} className="text-indigo-600" />
-              </div>
-            </div>
           </div>
         </header>
 
@@ -523,17 +504,6 @@ export default function App() {
                   setIsConfigured(false);
                   setActiveTab("dashboard");
                 }} />
-              )}
-              {activeTab === 'activity' && (
-                <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-12 text-center text-slate-400 flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-                    <Activity size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{activeTab} node pending</h3>
-                    <p className="text-sm font-medium">This module is part of the next rollout phase. Root access verified.</p>
-                  </div>
-                </div>
               )}
             </motion.div>
           </AnimatePresence>

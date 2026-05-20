@@ -188,9 +188,6 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                 className="w-full bg-white border border-slate-200 rounded-xl py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-2 focus:ring-indigo-100 text-slate-900 placeholder:text-slate-400 outline-none transition-all"
               />
             </div>
-            <button className="p-1.5 border border-slate-200 rounded-xl hover:bg-white transition-colors text-slate-500">
-              <Filter size={14} />
-            </button>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-2">Display:</span>
@@ -288,12 +285,6 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                         >
                           {matchStatus[book.id] === 'success' ? <CheckCircle2 size={10} /> : <Sparkles size={10} />}
                           {matchStatus[book.id] === 'success' ? "DONE" : "MATCH"}
-                        </button>
-                        <button 
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                        >
-                          <MoreVertical size={14} />
                         </button>
                       </div>
                     </td>
