@@ -21,11 +21,16 @@ interface UsersViewProps {
 export function UsersView({ users, sessions, userStats, books }: UsersViewProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFullHistory, setShowFullHistory] = useState(false);
+  type ViewMode = 'recent' | 'all-books' | 'full-log';
+  type ProgressFilter = 'all' | 'completed' | 'unfinished';
 
-  // Reset showFullHistory when selected user changes
+  const [viewMode, setViewMode] = useState<ViewMode>('recent');
+  const [progressFilter, setProgressFilter] = useState<ProgressFilter>('all');
+
+  // Reset view mode and progress filter when selected user changes
   useEffect(() => {
-    setShowFullHistory(false);
+    setViewMode('recent');
+    setProgressFilter('all');
   }, [selectedUserId]);
 
   const filteredUsers = useMemo(() => {
@@ -78,6 +83,44 @@ export function UsersView({ users, sessions, userStats, books }: UsersViewProps)
         : null);
     return { coverUrl, progressPercent };
   };
+
+  const allUserBooks = useMemo(() => {
+    const seenBooks = new Set<string>();
+    const booksList: { title: string; lastSession: Session }[] = [];
+
+    selectedUserSessions.forEach(session => {
+      const title = session.displayTitle || session.mediaItemTitle || "Unknown Book";
+      if (!seenBooks.has(title)) {
+        seenBooks.add(title);
+        booksList.push({
+          title,
+          lastSession: session
+        });
+      } else {
+        const existing = booksList.find(b => b.title.toLowerCase() === title.toLowerCase());
+        if (existing && session.startedAt > existing.lastSession.startedAt) {
+          existing.lastSession = session;
+        }
+      }
+    });
+
+    return booksList;
+  }, [selectedUserSessions]);
+
+  const filteredAllUserBooks = useMemo(() => {
+    return allUserBooks.filter(({ lastSession }) => {
+      const { progressPercent } = getSessionBookInfo(lastSession);
+      const progress = progressPercent ?? 0;
+
+      if (progressFilter === 'completed') {
+        return progress > 99;
+      }
+      if (progressFilter === 'unfinished') {
+        return progress <= 99;
+      }
+      return true;
+    });
+  }, [allUserBooks, progressFilter]);
 
   const userActivityChartData = useMemo(() => {
     if (!selectedUserId) return [];
@@ -253,40 +296,143 @@ export function UsersView({ users, sessions, userStats, books }: UsersViewProps)
 
             {/* Session Logs */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-              <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+              <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Listening Sessions</h3>
                   <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
-                    {showFullHistory ? "Detailed playback history" : "Books listened to in the last 14 days"}
+                    {viewMode === 'recent' && "Books listened to in the last 14 days"}
+                    {viewMode === 'all-books' && `All unique books (${progressFilter} progress)`}
+                    {viewMode === 'full-log' && "Detailed chronological playback history"}
                   </p>
                 </div>
-                <button 
-                  onClick={() => setShowFullHistory(!showFullHistory)}
-                  className="flex items-center gap-2 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-md text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm animate-pulse-subtle"
-                >
-                  {showFullHistory ? (
-                    <>
-                      <BookOpen size={10} /> Show Recent Books
-                    </>
-                  ) : (
-                    <>
-                      <List size={10} /> View Full Log
-                    </>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* View Mode Selector */}
+                  <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
+                    {[
+                      { label: "Recent", value: "recent" },
+                      { label: "All Books", value: "all-books" },
+                      { label: "Full Log", value: "full-log" }
+                    ].map((mode) => (
+                      <button
+                        key={mode.value}
+                        onClick={() => setViewMode(mode.value as ViewMode)}
+                        className={cn(
+                          "px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all",
+                          viewMode === mode.value 
+                            ? 'bg-white text-indigo-600 shadow-sm' 
+                            : 'text-slate-500 hover:text-slate-900'
+                        )}
+                      >
+                        {mode.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Progress Filter (only shown when viewMode is 'all-books') */}
+                  {viewMode === 'all-books' && (
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50 animate-pulse-subtle">
+                      {[
+                        { label: "All Status", value: "all" },
+                        { label: "Completed (>99%)", value: "completed" },
+                        { label: "Unfinished", value: "unfinished" }
+                      ].map((filter) => (
+                        <button
+                          key={filter.value}
+                          onClick={() => setProgressFilter(filter.value as ProgressFilter)}
+                          className={cn(
+                            "px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all",
+                            progressFilter === filter.value 
+                              ? 'bg-indigo-600 text-white shadow-sm' 
+                              : 'text-slate-500 hover:text-slate-900'
+                          )}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </button>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-slate-50/50">
                     <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
                       <th className="px-4 py-2">Status</th>
-                      <th className="px-4 py-2">{showFullHistory ? "Title" : "Book Title"}</th>
-                      <th className="px-4 py-2">{showFullHistory ? "Duration" : "Last Session Duration"}</th>
-                      <th className="px-4 py-2">{showFullHistory ? "Timestamp" : "Last Listened"}</th>
+                      <th className="px-4 py-2">
+                        {viewMode === 'full-log' ? "Title" : "Book Title"}
+                      </th>
+                      <th className="px-4 py-2">
+                        {viewMode === 'full-log' ? "Duration" : "Last Session Duration"}
+                      </th>
+                      <th className="px-4 py-2">
+                        {viewMode === 'full-log' ? "Timestamp" : "Last Listened"}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {showFullHistory ? (
+                    {viewMode === 'all-books' ? (
+                      filteredAllUserBooks.length > 0 ? (
+                        filteredAllUserBooks.map(({ title, lastSession }) => {
+                          const { coverUrl, progressPercent } = getSessionBookInfo(lastSession);
+                          return (
+                            <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
+                              <td className="px-4 py-2">
+                                <span className={cn(
+                                  "w-1.5 h-1.5 rounded-full inline-block",
+                                  lastSession.isActive ? "bg-indigo-500 animate-pulse" : "bg-emerald-400"
+                                )} />
+                              </td>
+                              <td className="px-4 py-2">
+                                <div className="flex items-center gap-3">
+                                  <img 
+                                    src={coverUrl} 
+                                    alt={title} 
+                                    className="w-8 h-8 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
+                                    }}
+                                  />
+                                  <div>
+                                    <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{title}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {progressPercent !== null && (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded">
+                                            {progressPercent}%
+                                          </span>
+                                          <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                            <div 
+                                              className="h-full bg-indigo-600 rounded-full" 
+                                              style={{ width: `${progressPercent}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                      <span className="text-[8px] text-slate-400 font-medium">
+                                        ID: {lastSession.id.split('_').pop()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 font-bold text-slate-700 text-[11px]">
+                                {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
+                              </td>
+                              <td className="px-4 py-2">
+                                <p className="text-[10px] font-medium text-slate-500">{format(lastSession.startedAt, "MMM d, HH:mm")}</p>
+                                <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
+                            No books matched the selected progress filter.
+                          </td>
+                        </tr>
+                      )
+                    ) : viewMode === 'full-log' ? (
                       selectedUserSessions.map((session) => {
                         const { coverUrl, progressPercent } = getSessionBookInfo(session);
                         return (
@@ -302,7 +448,7 @@ export function UsersView({ users, sessions, userStats, books }: UsersViewProps)
                                 <img 
                                   src={coverUrl} 
                                   alt={session.displayTitle || session.mediaItemTitle} 
-                                  className="w-7 h-10 rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
+                                  className="w-8 h-8 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
                                   onError={(e) => {
                                     const title = session.displayTitle || session.mediaItemTitle || "Book";
                                     (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
@@ -348,14 +494,17 @@ export function UsersView({ users, sessions, userStats, books }: UsersViewProps)
                           return (
                             <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
                               <td className="px-4 py-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block" />
+                                <span className={cn(
+                                  "w-1.5 h-1.5 rounded-full inline-block",
+                                  lastSession.isActive ? "bg-indigo-500 animate-pulse" : "bg-emerald-400"
+                                )} />
                               </td>
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
                                   <img 
                                     src={coverUrl} 
                                     alt={title} 
-                                    className="w-7 h-10 rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
+                                    className="w-8 h-8 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
                                     onError={(e) => {
                                       (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
                                     }}
@@ -396,7 +545,7 @@ export function UsersView({ users, sessions, userStats, books }: UsersViewProps)
                       ) : (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
-                            No books listened to in the last 14 days. Click "View Full Log" to see all history.
+                            No books listened to in the last 14 days. Select "All Books" or "Full Log" to see historical data.
                           </td>
                         </tr>
                       )
