@@ -49,13 +49,34 @@ export default function App() {
   const [books, setBooks] = useState<Book[]>([]);
   const [totalBooks, setTotalBooks] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function fetchSessions(isInitial = false) {
+    try {
+      setSessionsLoading(true);
+      const bypassParam = isInitial ? "" : "&bypassCache=true";
+      // Limit items to 500 (Solution 4) and handle caching on backend
+      const sessionRes = await axios.get(`/api/abs/sessions?itemsPerPage=500&sort=startedAt&desc=1${bypassParam}`);
+      const allSessions = sessionRes.data.sessions || sessionRes.data || [];
+      setSessions(allSessions);
+    } catch (err) {
+      console.error("Failed to fetch listening sessions:", err);
+    } finally {
+      setSessionsLoading(false);
+      setRefreshing(false);
+    }
+  }
+
   async function fetchData(isInitial = false) {
     try {
-      if (isInitial) setLoading(true);
-      else setRefreshing(true);
+      if (isInitial) {
+        setLoading(true);
+        setSessionsLoading(true);
+      } else {
+        setRefreshing(true);
+      }
       
       setError(null);
 
@@ -64,23 +85,21 @@ export default function App() {
       if (healthRes.data.error) {
         setError(healthRes.data.error);
         setLoading(false);
+        setSessionsLoading(false);
         setRefreshing(false);
         return;
       }
 
-      const [libRes, userRes, sessionRes, recentRes, onlineRes] = await Promise.all([
+      // Fetch fast primary items first, excluding slow sessions call (Solution 1)
+      const [libRes, userRes, recentRes, onlineRes] = await Promise.all([
         axios.get("/api/abs/libraries"),
         axios.get("/api/abs/users"),
-        axios.get("/api/abs/sessions?itemsPerPage=5000&sort=startedAt&desc=1"),
         axios.get("/api/abs/recent"),
         axios.get("/api/abs/users/online")
       ]);
 
       setLibraries(libRes.data.libraries || libRes.data || []);
       setUsers(userRes.data.users || userRes.data || []);
-      
-      const allSessions = sessionRes.data.sessions || sessionRes.data || [];
-      setSessions(allSessions);
       
       const rawUsers: any[] = userRes.data.users || userRes.data || [];
       const usersOnline: any[] = onlineRes.data.usersOnline || [];
@@ -119,11 +138,17 @@ export default function App() {
       });
       setBooks(transformedBooks);
       setTotalBooks(recentRes.data.totalBooks || 0);
+
+      // Shell loaded immediately
+      setLoading(false);
+
+      // Asynchronously trigger lazy-loading of sessions
+      fetchSessions(isInitial);
     } catch (err: any) {
       console.error(err);
       setError("Failed to connect to Audiobookshelf. Please check your ABS_URL and ABS_TOKEN.");
-    } finally {
       setLoading(false);
+      setSessionsLoading(false);
       setRefreshing(false);
     }
   }
@@ -430,6 +455,7 @@ export default function App() {
                   userStats={userStats}
                   libraries={libraries}
                   activeSessions={activeSessions}
+                  sessionsLoading={sessionsLoading}
                 />
               )}
               {activeTab === 'users' && (
@@ -438,6 +464,7 @@ export default function App() {
                   sessions={sessions}
                   userStats={userStats}
                   books={books}
+                  sessionsLoading={sessionsLoading}
                 />
               )}
               {activeTab === 'library' && (

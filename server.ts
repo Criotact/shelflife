@@ -76,6 +76,37 @@ async function startServer() {
     }
   });
 
+  // In-memory cache for sessions standard query
+  let sessionsCache: { data: any; timestamp: number } | null = null;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  app.get("/api/abs/sessions", async (req, res) => {
+    try {
+      const { itemsPerPage, sort, desc, bypassCache } = req.query;
+      const isStandardQuery = itemsPerPage === "500" && sort === "startedAt" && desc === "1";
+      const shouldBypass = bypassCache === "true";
+
+      if (isStandardQuery && !shouldBypass && sessionsCache && (Date.now() - sessionsCache.timestamp < CACHE_TTL)) {
+        return res.json(sessionsCache.data);
+      }
+
+      const api = getAbsApi();
+      const response = await api.get("api/sessions", { params: req.query });
+
+      if (isStandardQuery) {
+        sessionsCache = {
+          data: response.data,
+          timestamp: Date.now()
+        };
+      }
+
+      res.json(response.data);
+    } catch (error: any) {
+      console.error("Failed to fetch sessions:", error.message);
+      res.status(error.response?.status || 500).json({ error: error.message });
+    }
+  });
+
   if (ABS_URL && ABS_TOKEN) {
     // Proxy remaining API requests directly
     app.use("/api/abs", createProxyMiddleware({

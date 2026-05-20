@@ -23,13 +23,14 @@ interface DashboardViewProps {
   userStats: UserStats[];
   libraries: Library[];
   activeSessions: Session[];
+  sessionsLoading: boolean;
 }
 
 export function DashboardView({ 
-  recentBooks, totalBooks, sessions, userStats, libraries, activeSessions 
+  recentBooks, totalBooks, sessions, userStats, libraries, activeSessions, sessionsLoading
 }: DashboardViewProps) {
   const [chartView, setChartView] = useState<'total' | 'users'>('total');
-  const [timeframe, setTimeframe] = useState<'7' | '30' | '365' | 'all'>('all');
+  const [timeframe, setTimeframe] = useState<'7' | '30' | '365' | 'all'>('30');
   
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -269,47 +270,72 @@ export function DashboardView({
               </div>
             </div>
           </div>
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} dy={5} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    borderRadius: '8px', 
-                    border: 'none', 
-                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                    fontSize: '10px',
-                    fontWeight: '600'
-                  }}
-                />
-                {chartView === 'total' ? (
-                  <Line 
-                    type="monotone" 
-                    dataKey="hours" 
-                    stroke="#6366f1" 
-                    strokeWidth={2} 
-                    dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: '#fff' }} 
-                    activeDot={{ r: 5, strokeWidth: 0 }} 
+          {sessionsLoading ? (
+            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse relative overflow-hidden select-none">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+                <div className="flex flex-col items-center gap-2">
+                  <Activity size={24} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Analyzing listening trends...</p>
+                </div>
+              </div>
+              <div className="flex items-end justify-between h-40 px-2 opacity-40">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-4 bg-slate-200 rounded-t-sm" 
+                    style={{ height: `${Math.sin(i * 0.5) * 50 + 60}%` }}
                   />
-                ) : (
-                  topUsers.map((user, idx) => (
+                ))}
+              </div>
+              <div className="flex justify-between border-t border-slate-200/50 pt-2 px-1">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-8 h-2.5 bg-slate-200 rounded-sm" />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="h-[240px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lineChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} dy={5} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      borderRadius: '8px', 
+                      border: 'none', 
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      fontSize: '10px',
+                      fontWeight: '600'
+                    }}
+                  />
+                  {chartView === 'total' ? (
                     <Line 
-                      key={user.userId}
                       type="monotone" 
-                      dataKey={user.username} 
-                      stroke={COLORS[idx % COLORS.length]} 
+                      dataKey="hours" 
+                      stroke="#6366f1" 
                       strokeWidth={2} 
-                      dot={{ r: 2, fill: COLORS[idx % COLORS.length], strokeWidth: 1, stroke: '#fff' }} 
-                      activeDot={{ r: 4, strokeWidth: 0 }} 
+                      dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: '#fff' }} 
+                      activeDot={{ r: 5, strokeWidth: 0 }} 
                     />
-                  ))
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+                  ) : (
+                    topUsers.map((user, idx) => (
+                      <Line 
+                        key={user.userId}
+                        type="monotone" 
+                        dataKey={user.username} 
+                        stroke={COLORS[idx % COLORS.length]} 
+                        strokeWidth={2} 
+                        dot={{ r: 2, fill: COLORS[idx % COLORS.length], strokeWidth: 1, stroke: '#fff' }} 
+                        activeDot={{ r: 4, strokeWidth: 0 }} 
+                      />
+                    ))
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -332,76 +358,106 @@ export function DashboardView({
           </div>
           
           <div className="flex-grow overflow-y-auto no-scrollbar flex flex-col gap-3 pr-1">
-            {last7DaysActivitiesGrouped.map((user) => (
-              <div key={user.userId} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30">
-                {/* User identity row */}
-                <div className="flex items-center justify-between px-2 py-1 bg-white rounded-xl border border-slate-100 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm uppercase shrink-0">
-                      {user.username.charAt(0)}
+            {sessionsLoading ? (
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30 animate-pulse select-none">
+                  {/* Pulsing User identity row */}
+                  <div className="flex items-center justify-between px-2 py-1 bg-white rounded-xl border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-slate-200 shrink-0" />
+                      <div className="w-16 h-3 bg-slate-200 rounded shrink-0" />
                     </div>
-                    <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{user.username}</span>
+                    <div className="w-12 h-4 bg-slate-100 rounded-full" />
                   </div>
-                  <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/50">
-                    {formatDuration(user.totalTime)}
-                  </span>
-                </div>
-
-                {/* Sub-list of up to 3 unique books */}
-                <div className="flex flex-col gap-1.5 px-1 pb-1">
-                  {user.uniqueBooks.map(({ title, lastSession }) => {
-                    const { coverUrl, progressPercent } = getSessionBookInfo(lastSession);
-                    return (
-                      <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-100 transition-all group/book">
-                        <img 
-                          src={coverUrl} 
-                          alt={title} 
-                          className="w-7 h-7 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
-                          }}
-                        />
-                        <div className="flex-grow min-w-0">
-                          <p className="text-[10px] font-bold text-slate-800 truncate group-hover/book:text-indigo-600 transition-colors">{title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {progressPercent !== null && (
-                              <div className="flex items-center gap-1 shrink-0">
-                                <span className="text-[8px] font-extrabold text-indigo-600 bg-indigo-50 px-0.5 rounded shrink-0">
-                                  {progressPercent}%
-                                </span>
-                                <div className="w-8 h-0.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
-                                  <div 
-                                    className="h-full bg-indigo-600 rounded-full" 
-                                    style={{ width: `${progressPercent}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                            <span className="text-[8px] text-slate-400 font-medium truncate">
-                              Session: {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
-                            </span>
-                          </div>
+                  {/* Pulsing sub-book items */}
+                  <div className="flex flex-col gap-1.5 px-1 pb-1">
+                    {Array.from({ length: 2 }).map((_, bIdx) => (
+                      <div key={bIdx} className="flex items-center gap-3 p-1.5 rounded-xl bg-white border border-slate-100">
+                        <div className="w-7 h-7 bg-slate-200 rounded shrink-0" />
+                        <div className="flex-grow">
+                          <div className="w-24 h-3 bg-slate-200 rounded mb-1" />
+                          <div className="w-16 h-2.5 bg-slate-100 rounded" />
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
-                        </div>
+                        <div className="w-10 h-2.5 bg-slate-100 rounded shrink-0" />
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <>
+                {last7DaysActivitiesGrouped.map((user) => (
+                  <div key={user.userId} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30">
+                    {/* User identity row */}
+                    <div className="flex items-center justify-between px-2 py-1 bg-white rounded-xl border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm uppercase shrink-0">
+                          {user.username.charAt(0)}
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{user.username}</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/50">
+                        {formatDuration(user.totalTime)}
+                      </span>
+                    </div>
 
-            {last7DaysActivitiesGrouped.length === 0 && (
-              <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-12 flex-grow">
-                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
-                  <Activity size={18} className="text-slate-400" />
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Silence reigns</p>
-                  <p className="text-[8px] font-medium text-slate-400">No user activity recorded in the last 7 days.</p>
-                </div>
-              </div>
+                    {/* Sub-list of up to 3 unique books */}
+                    <div className="flex flex-col gap-1.5 px-1 pb-1">
+                      {user.uniqueBooks.map(({ title, lastSession }) => {
+                        const { coverUrl, progressPercent } = getSessionBookInfo(lastSession);
+                        return (
+                          <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-100 transition-all group/book">
+                            <img 
+                              src={coverUrl} 
+                              alt={title} 
+                              className="w-7 h-7 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
+                              }}
+                            />
+                            <div className="flex-grow min-w-0">
+                              <p className="text-[10px] font-bold text-slate-800 truncate group-hover/book:text-indigo-600 transition-colors">{title}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {progressPercent !== null && (
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <span className="text-[8px] font-extrabold text-indigo-600 bg-indigo-50 px-0.5 rounded shrink-0">
+                                      {progressPercent}%
+                                    </span>
+                                    <div className="w-8 h-0.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
+                                      <div 
+                                        className="h-full bg-indigo-600 rounded-full" 
+                                        style={{ width: `${progressPercent}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                                <span className="text-[8px] text-slate-400 font-medium truncate">
+                                  Session: {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {last7DaysActivitiesGrouped.length === 0 && (
+                  <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-12 flex-grow">
+                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+                      <Activity size={18} className="text-slate-400" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Silence reigns</p>
+                      <p className="text-[8px] font-medium text-slate-400">No user activity recorded in the last 7 days.</p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
