@@ -8,6 +8,8 @@ import { Book, Library } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../lib/utils";
 import { api } from "../lib/api";
+import { MatchModal } from "./MatchModal";
+import { AnimatePresence } from "motion/react";
 
 interface LibraryViewProps {
   books: Book[];
@@ -20,6 +22,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   const [selectedLibraryId, setSelectedLibraryId] = useState<string>("");
   const [isRescanning, setIsRescanning] = useState(false);
   const [matchStatus, setMatchStatus] = useState<Record<string, 'matching' | 'success' | null>>({});
+  const [selectedBookForMatch, setSelectedBookForMatch] = useState<Book | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(15);
 
@@ -78,19 +81,12 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
     }
   };
 
-  const handleMatch = async (id: string) => {
-    setMatchStatus(prev => ({ ...prev, [id]: 'matching' }));
-    try {
-      await api.matchLibraryItem(id);
-      setMatchStatus(prev => ({ ...prev, [id]: 'success' }));
-      setTimeout(() => {
-        setMatchStatus(prev => ({ ...prev, [id]: null }));
-        fetchLibraryBooks();
-      }, 2000);
-    } catch (err) {
-      console.error("Match failed:", err);
+  const handleMatchSuccess = (id: string) => {
+    setMatchStatus(prev => ({ ...prev, [id]: 'success' }));
+    setTimeout(() => {
       setMatchStatus(prev => ({ ...prev, [id]: null }));
-    }
+      fetchLibraryBooks();
+    }, 2000);
   };
 
   const filteredBooks = useMemo(() => {
@@ -269,16 +265,15 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button 
-                          onClick={() => handleMatch(book.id)}
+                          onClick={() => setSelectedBookForMatch(book)}
                           className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
-                            matchStatus[book.id] === 'matching' ? "bg-amber-50 text-amber-600" :
                             matchStatus[book.id] === 'success' ? "bg-emerald-50 text-emerald-600" :
                             "bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white"
                           )}
                         >
-                          {matchStatus[book.id] === 'matching' ? <RefreshCw size={10} className="animate-spin" /> : <Sparkles size={10} />}
-                          {matchStatus[book.id] === 'matching' ? "SYNC" : matchStatus[book.id] === 'success' ? "DONE" : "MATCH"}
+                          {matchStatus[book.id] === 'success' ? <CheckCircle2 size={10} /> : <Sparkles size={10} />}
+                          {matchStatus[book.id] === 'success' ? "DONE" : "MATCH"}
                         </button>
                         <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
                           <MoreVertical size={14} />
@@ -310,6 +305,17 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           </div>
         )}
       </div>
+
+      {/* Interactive Metadata Matching Modal */}
+      <AnimatePresence>
+        {selectedBookForMatch && (
+          <MatchModal
+            book={selectedBookForMatch}
+            onClose={() => setSelectedBookForMatch(null)}
+            onMatchSuccess={() => handleMatchSuccess(selectedBookForMatch.id)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

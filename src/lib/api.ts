@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import { MatchCandidate } from "../types";
 
 export interface ConnectionConfig {
   url: string;
@@ -154,10 +155,44 @@ class ApiClient {
     return response.data;
   }
 
-  public async matchLibraryItem(itemId: string) {
+  public async matchLibraryItem(itemId: string, matchData?: MatchCandidate) {
     if (!this.client) throw new Error("Client not initialized");
-    const response = await this.client.post(`/items/${itemId}/match`);
+    const payload = matchData ? {
+      provider: matchData.provider,
+      id: matchData.id,
+      title: matchData.title,
+      author: matchData.author || null,
+      isbn: matchData.isbn || null,
+      asin: matchData.asin || null,
+      coverUrl: matchData.coverUrl || null,
+      subtitle: matchData.subtitle || null,
+      publisher: matchData.publisher || null,
+      publishDate: matchData.publishDate || null,
+      description: matchData.description || null
+    } : undefined;
+    const response = await this.client.post(`/items/${itemId}/match`, payload);
     return response.data;
+  }
+
+  public async searchMatches(itemId: string, provider: string, title: string, author?: string): Promise<MatchCandidate[]> {
+    if (!this.client) throw new Error("Client not initialized");
+    const response = await this.client.get("/search/books", {
+      params: { provider, title, author }
+    });
+    const candidates = response.data || [];
+    return candidates.map((c: any) => ({
+      title: c.title,
+      author: c.author,
+      coverUrl: c.cover || (c.covers && c.covers[0]) || undefined,
+      asin: c.asin || undefined,
+      isbn: c.isbn || undefined,
+      subtitle: c.subtitle || undefined,
+      publisher: c.publisher || undefined,
+      publishDate: c.publishDate || c.publishedYear || undefined,
+      description: c.description || undefined,
+      provider: provider,
+      id: c.id || c.key || c.edition || ""
+    }));
   }
 
   // Recent items - aggregate client-side if in direct mode

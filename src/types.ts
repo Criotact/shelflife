@@ -56,3 +56,18 @@ export interface UserStats {
   deviceUsage: string;
   topGenre: string;
 }
+
+export interface MatchCandidate {
+  title: string;
+  author?: string;
+  coverUrl?: string;
+  asin?: string;
+  isbn?: string;
+  subtitle?: string;
+  publisher?: string;
+  publishDate?: string;
+  description?: string;
+  provider: string;
+  id: string;
+}
+
