@@ -107,6 +107,28 @@ async function startServer() {
     }
   });
 
+  app.get("/api/abs/chapters/lookup", async (req, res) => {
+    try {
+      const { asin, region } = req.query;
+      if (!asin) {
+        return res.status(400).json({ error: "ASIN is required" });
+      }
+      const params = new URLSearchParams();
+      if (region && typeof region === "string") params.set("region", region);
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      const url = `https://api.audnex.us/books/${asin}/chapters${qs}`;
+      const response = await axios.get(url, { timeout: 10000 });
+      res.json(response.data);
+    } catch (error: any) {
+      console.error("Failed to fetch chapters from Audnexus:", error.message);
+      const status = error.response?.status || 500;
+      const msg = status === 404
+        ? "This ASIN was not found in the Audnexus database. Try a different region or verify the Audible ASIN."
+        : error.message;
+      res.status(status).json({ error: msg });
+    }
+  });
+
   if (ABS_URL && ABS_TOKEN) {
     // Proxy remaining API requests directly
     app.use("/api/abs", createProxyMiddleware({

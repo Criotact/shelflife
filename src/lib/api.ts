@@ -239,6 +239,33 @@ class ApiClient {
       return response.data;
     }
   }
+
+  public async getItemDetails(itemId: string) {
+    if (!this.client) throw new Error("Client not initialized");
+    const response = await this.client.get(`/items/${itemId}`);
+    return response.data;
+  }
+
+  public async lookupChapters(asin: string, region?: string) {
+    if (this.config?.isDirect) {
+      const params: Record<string, string> = {};
+      if (region) params.region = region;
+      const response = await axios.get(`https://api.audnex.us/books/${asin}/chapters`, { params });
+      return response.data;
+    } else {
+      if (!this.client) throw new Error("Client not initialized");
+      const params: Record<string, string> = { asin };
+      if (region) params.region = region;
+      const response = await this.client.get("/chapters/lookup", { params });
+      return response.data;
+    }
+  }
+
+  public async updateChapters(itemId: string, chapters: any[]) {
+    if (!this.client) throw new Error("Client not initialized");
+    const response = await this.client.post(`/items/${itemId}/chapters`, { chapters });
+    return response.data;
+  }
 }
 
 export const api = new ApiClient();

@@ -32,7 +32,7 @@ export function RecentItems({ items }: RecentItemsProps) {
                       src={book.metadata.coverPath} 
                       alt={book.metadata.title || "Book cover"} 
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover aspect-square"
                       onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
                   ) : (

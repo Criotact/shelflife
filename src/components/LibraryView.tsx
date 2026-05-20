@@ -8,7 +8,7 @@ import { Book, Library } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../lib/utils";
 import { api } from "../lib/api";
-import { MatchModal } from "./MatchModal";
+import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
 
 interface LibraryViewProps {
@@ -22,7 +22,8 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   const [selectedLibraryId, setSelectedLibraryId] = useState<string>("");
   const [isRescanning, setIsRescanning] = useState(false);
   const [matchStatus, setMatchStatus] = useState<Record<string, 'matching' | 'success' | null>>({});
-  const [selectedBookForMatch, setSelectedBookForMatch] = useState<Book | null>(null);
+  const [selectedBookForDetails, setSelectedBookForDetails] = useState<Book | null>(null);
+  const [initialModalTab, setInitialModalTab] = useState<'details' | 'match' | 'chapters'>('details');
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(15);
 
@@ -90,15 +91,17 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   };
 
   const filteredBooks = useMemo(() => {
-    return books.filter(book => {
-      const title = book.metadata?.title || "";
-      const author = book.metadata?.authorName || "";
-      const id = book.id || "";
-      const query = searchTerm.toLowerCase();
-      return title.toLowerCase().includes(query) || 
-             author.toLowerCase().includes(query) || 
-             id.toLowerCase().includes(query);
-    });
+    return books
+      .filter(book => {
+        const title = book.metadata?.title || "";
+        const author = book.metadata?.authorName || "";
+        const id = book.id || "";
+        const query = searchTerm.toLowerCase();
+        return title.toLowerCase().includes(query) || 
+               author.toLowerCase().includes(query) || 
+               id.toLowerCase().includes(query);
+      })
+      .sort((a, b) => b.addedAt - a.addedAt);
   }, [books, searchTerm]);
 
   const paginatedBooks = useMemo(() => {
@@ -144,7 +147,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             )}
           >
             <RefreshCw size={14} className={cn(isRescanning && "animate-spin")} />
-            {isRescanning ? "SCAN_RUNNING" : "FORCE_RESCAN"}
+            {isRescanning ? "Scanning..." : "Rescan Library"}
           </button>
         </div>
       </div>
@@ -224,7 +227,14 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                 </tr>
               ) : (
                 paginatedBooks.map((book) => (
-                  <tr key={book.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <tr 
+                    key={book.id} 
+                    onClick={() => {
+                      setSelectedBookForDetails(book);
+                      setInitialModalTab('details');
+                    }}
+                    className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+                  >
                     <td className="px-5 py-3">
                       <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                         <CheckCircle2 size={14} />
@@ -232,13 +242,13 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-12 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300">
+                        <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300">
                           {book.metadata?.coverPath ? (
                             <img 
                               src={book.metadata.coverPath} 
                               alt={book.metadata.title}
                               referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover aspect-square"
                             />
                           ) : (
                             <BookOpen size={16} />
@@ -265,7 +275,11 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button 
-                          onClick={() => setSelectedBookForMatch(book)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedBookForDetails(book);
+                            setInitialModalTab('match');
+                          }}
                           className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
                             matchStatus[book.id] === 'success' ? "bg-emerald-50 text-emerald-600" :
@@ -275,7 +289,10 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                           {matchStatus[book.id] === 'success' ? <CheckCircle2 size={10} /> : <Sparkles size={10} />}
                           {matchStatus[book.id] === 'success' ? "DONE" : "MATCH"}
                         </button>
-                        <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
+                        <button 
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                        >
                           <MoreVertical size={14} />
                         </button>
                       </div>
@@ -306,13 +323,14 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
         )}
       </div>
 
-      {/* Interactive Metadata Matching Modal */}
+      {/* Interactive Metadata & Chapters Details Modal */}
       <AnimatePresence>
-        {selectedBookForMatch && (
-          <MatchModal
-            book={selectedBookForMatch}
-            onClose={() => setSelectedBookForMatch(null)}
-            onMatchSuccess={() => handleMatchSuccess(selectedBookForMatch.id)}
+        {selectedBookForDetails && (
+          <BookDetailsModal
+            book={selectedBookForDetails}
+            initialTab={initialModalTab}
+            onClose={() => setSelectedBookForDetails(null)}
+            onMatchSuccess={() => handleMatchSuccess(selectedBookForDetails.id)}
           />
         )}
       </AnimatePresence>
