@@ -241,8 +241,11 @@ export function BookDetailsModal({ book, initialTab = "details", onClose, onMatc
   const displayNarrator = metadata.narratorName || "";
   const displayPublisher = metadata.publisher || "";
   const displayPublishDate = metadata.publishedDate || metadata.publishedYear || "";
-  const displaySeries = metadata.series || "";
-  const displaySeriesSeq = metadata.seriesSequence || "";
+  const seriesList = Array.isArray(metadata.series) 
+    ? metadata.series 
+    : metadata.series 
+      ? [{ name: metadata.series, sequence: metadata.seriesSequence || "" }]
+      : [];
   const displayGenres = metadata.genres || [];
   const displayTags = metadata.tags || [];
   const displayDescription = metadata.description || "";
@@ -405,10 +408,14 @@ export function BookDetailsModal({ book, initialTab = "details", onClose, onMatc
                         <p className="text-xs text-slate-500 font-medium tracking-tight mt-1">{displaySubtitle}</p>
                       )}
                       
-                      {displaySeries && (
-                        <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-lg mt-2 shadow-sm">
-                          <Award size={10} />
-                          <span>{displaySeries} {displaySeriesSeq && `#${displaySeriesSeq}`}</span>
+                      {seriesList.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {seriesList.map((s: any, idx: number) => (
+                            <div key={idx} className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
+                              <Award size={10} />
+                              <span>{s.name || s} {s.sequence && `#${s.sequence}`}</span>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>

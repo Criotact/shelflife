@@ -15,6 +15,8 @@ import { StatsCard } from "./StatsCard";
 import { UserStatsList } from "./UserStatsList";
 import { RecentItems } from "./RecentItems";
 import { formatDuration } from "../lib/utils";
+import { BookDetailsModal } from "./BookDetailsModal";
+import { AnimatePresence } from "motion/react";
 
 interface DashboardViewProps {
   recentBooks: Book[];
@@ -31,6 +33,8 @@ export function DashboardView({
 }: DashboardViewProps) {
   const [chartView, setChartView] = useState<'total' | 'users'>('total');
   const [timeframe, setTimeframe] = useState<'7' | '30' | '365' | 'all'>('30');
+  const [selectedBookForDetails, setSelectedBookForDetails] = useState<Book | null>(null);
+  const [initialModalTab, setInitialModalTab] = useState<'details' | 'match' | 'chapters'>('details');
   
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -346,7 +350,13 @@ export function DashboardView({
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Latest library items</p>
             </div>
           </div>
-          <RecentItems items={recentBooks} />
+          <RecentItems 
+            items={recentBooks} 
+            onBookClick={(book) => {
+              setSelectedBookForDetails(book);
+              setInitialModalTab('details');
+            }}
+          />
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[400px]">
@@ -462,7 +472,16 @@ export function DashboardView({
           </div>
         </div>
       </div>
-
+      <AnimatePresence>
+        {selectedBookForDetails && (
+          <BookDetailsModal
+            book={selectedBookForDetails}
+            initialTab={initialModalTab}
+            onClose={() => setSelectedBookForDetails(null)}
+            onMatchSuccess={() => {}}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

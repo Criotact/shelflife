@@ -26,6 +26,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   const [initialModalTab, setInitialModalTab] = useState<'details' | 'match' | 'chapters'>('details');
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(15);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   useEffect(() => {
     if (libraries.length > 0) {
@@ -191,109 +192,183 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-2">Display:</span>
-            <button className="p-1 px-2.5 bg-white border border-slate-200 rounded-lg text-[9px] font-bold text-indigo-600">TABLE</button>
-            <button className="p-1 px-2.5 hover:bg-slate-50 text-[9px] font-bold text-slate-400">GRID</button>
+            <button 
+              onClick={() => setViewMode('table')}
+              className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all", viewMode === 'table' ? "bg-white border border-slate-200 text-indigo-600" : "hover:bg-slate-50 text-slate-400")}
+            >
+              TABLE
+            </button>
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all", viewMode === 'grid' ? "bg-white border border-slate-200 text-indigo-600" : "hover:bg-slate-50 text-slate-400")}
+            >
+              GRID
+            </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Title / Author</th>
-                <th className="px-5 py-3">Library Node</th>
-                <th className="px-5 py-3">Index Time</th>
-                <th className="px-5 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
-                    <RefreshCw size={20} className="animate-spin text-indigo-600 mx-auto mb-2" />
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Syncing repository contents...</p>
-                  </td>
+        {viewMode === 'table' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
+                  <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Title / Author</th>
+                  <th className="px-5 py-3">Library Node</th>
+                  <th className="px-5 py-3">Index Time</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
-              ) : paginatedBooks.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
-                    <AlertCircle size={20} className="text-slate-400 mx-auto mb-2" />
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No assets match your search</p>
-                  </td>
-                </tr>
-              ) : (
-                paginatedBooks.map((book) => (
-                  <tr 
-                    key={book.id} 
-                    onClick={() => {
-                      setSelectedBookForDetails(book);
-                      setInitialModalTab('details');
-                    }}
-                    className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
-                  >
-                    <td className="px-5 py-3">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <CheckCircle2 size={14} />
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-12 text-center">
+                      <RefreshCw size={20} className="animate-spin text-indigo-600 mx-auto mb-2" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Syncing repository contents...</p>
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300">
-                          {book.metadata?.coverPath ? (
-                            <img 
-                              src={book.metadata.coverPath} 
-                              alt={book.metadata.title}
-                              referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover aspect-square"
-                            />
-                          ) : (
-                            <BookOpen size={16} />
-                          )}
+                  </tr>
+                ) : paginatedBooks.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-12 text-center">
+                      <AlertCircle size={20} className="text-slate-400 mx-auto mb-2" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No assets match your search</p>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedBooks.map((book) => (
+                    <tr 
+                      key={book.id} 
+                      onClick={() => {
+                        setSelectedBookForDetails(book);
+                        setInitialModalTab('details');
+                      }}
+                      className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    >
+                      <td className="px-5 py-3">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                          <CheckCircle2 size={14} />
                         </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
-                          <p className="text-[9px] text-slate-500 font-medium">{book.metadata?.authorName}</p>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300">
+                            {book.metadata?.coverPath ? (
+                              <img 
+                                src={book.metadata.coverPath} 
+                                alt={book.metadata.title}
+                                referrerPolicy="no-referrer"
+                                className="w-full h-full object-cover aspect-square"
+                              />
+                            ) : (
+                              <BookOpen size={16} />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
+                            <p className="text-[9px] text-slate-500 font-medium">{book.metadata?.authorName}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-1.5">
-                         <Tag size={10} className="text-slate-400" />
-                         <span className="text-[10px] font-semibold text-slate-600">
-                          {libraries.find(l => l.id === book.libraryId)?.name || "Default Library"}
-                         </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <p className="text-[11px] font-bold text-slate-700">{formatDistanceToNow(book.addedAt)} ago</p>
-                      <p className="text-[8px] text-slate-400 uppercase font-bold tracking-widest uppercase">System Index</p>
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-1.5">
+                           <Tag size={10} className="text-slate-400" />
+                           <span className="text-[10px] font-semibold text-slate-600">
+                            {libraries.find(l => l.id === book.libraryId)?.name || "Default Library"}
+                           </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <p className="text-[11px] font-bold text-slate-700">{formatDistanceToNow(book.addedAt)} ago</p>
+                        <p className="text-[8px] text-slate-400 uppercase font-bold tracking-widest uppercase">System Index</p>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBookForDetails(book);
+                              setInitialModalTab('match');
+                            }}
+                            className={cn(
+                              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
+                              matchStatus[book.id] === 'success' ? "bg-emerald-50 text-emerald-600" :
+                              "bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white"
+                            )}
+                          >
+                            {matchStatus[book.id] === 'success' ? <CheckCircle2 size={10} /> : <Sparkles size={10} />}
+                            {matchStatus[book.id] === 'success' ? "DONE" : "MATCH"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {loading ? (
+              <div className="col-span-full py-12 text-center">
+                <RefreshCw size={20} className="animate-spin text-indigo-600 mx-auto mb-2" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Syncing repository contents...</p>
+              </div>
+            ) : paginatedBooks.length === 0 ? (
+              <div className="col-span-full py-12 text-center">
+                <AlertCircle size={20} className="text-slate-400 mx-auto mb-2" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No assets match your search</p>
+              </div>
+            ) : (
+              paginatedBooks.map((book) => (
+                <div 
+                  key={book.id} 
+                  onClick={() => {
+                    setSelectedBookForDetails(book);
+                    setInitialModalTab('details');
+                  }}
+                  className="group flex flex-col gap-2 cursor-pointer"
+                >
+                  <div className="w-full aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm group-hover:shadow-md group-hover:border-indigo-200 transition-all relative flex items-center justify-center text-slate-300">
+                    {book.metadata?.coverPath ? (
+                      <img 
+                        src={book.metadata.coverPath} 
+                        alt={book.metadata.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover aspect-square"
+                      />
+                    ) : (
+                      <BookOpen size={32} />
+                    )}
+                    
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      {matchStatus[book.id] === 'success' ? (
+                        <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                          <CheckCircle2 size={12} />
+                        </div>
+                      ) : (
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedBookForDetails(book);
                             setInitialModalTab('match');
                           }}
-                          className={cn(
-                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
-                            matchStatus[book.id] === 'success' ? "bg-emerald-50 text-emerald-600" :
-                            "bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white"
-                          )}
+                          className="w-6 h-6 rounded-full bg-white/90 backdrop-blur text-slate-600 hover:text-indigo-600 hover:bg-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                          title="Match Metadata"
                         >
-                          {matchStatus[book.id] === 'success' ? <CheckCircle2 size={10} /> : <Sparkles size={10} />}
-                          {matchStatus[book.id] === 'success' ? "DONE" : "MATCH"}
+                          <Sparkles size={12} />
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-900 line-clamp-1 group-hover:text-indigo-600 transition-colors" title={book.metadata?.title}>{book.metadata?.title}</p>
+                    <p className="text-[9px] text-slate-500 font-medium line-clamp-1" title={book.metadata?.authorName}>{book.metadata?.authorName}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
         
         {!loading && filteredBooks.length > visibleCount && (
           <div className="p-3 bg-slate-50/50 border-t border-slate-200 flex items-center justify-center">
