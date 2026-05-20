@@ -13,7 +13,6 @@ import {
   AlertCircle,
   RefreshCcw
 } from "lucide-react";
-import axios from "axios";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -28,6 +27,8 @@ import { DashboardView } from "./components/DashboardView";
 import { UsersView } from "./components/UsersView";
 import { LibraryView } from "./components/LibraryView";
 import { SettingsView } from "./components/SettingsView";
+import { ConnectionScreen } from "./components/ConnectionScreen";
+import { api } from "./lib/api";
 import { cn } from "./lib/utils";
 
 const NAV_ITEMS = [
@@ -40,6 +41,9 @@ const NAV_ITEMS = [
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Connection state
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
 
   // Data state
   const [libraries, setLibraries] = useState<Library[]>([]);
@@ -56,10 +60,13 @@ export default function App() {
   async function fetchSessions(isInitial = false) {
     try {
       setSessionsLoading(true);
-      const bypassParam = isInitial ? "" : "&bypassCache=true";
-      // Limit items to 500 (Solution 4) and handle caching on backend
-      const sessionRes = await axios.get(`/api/abs/sessions?itemsPerPage=500&sort=startedAt&desc=1${bypassParam}`);
-      const allSessions = sessionRes.data.sessions || sessionRes.data || [];
+      const sessionRes = await api.getSessions({
+        itemsPerPage: 500,
+        sort: "startedAt",
+        desc: "1",
+        bypassCache: isInitial ? undefined : "true"
+      });
+      const allSessions = sessionRes.sessions || sessionRes || [];
       setSessions(allSessions);
     } catch (err) {
       console.error("Failed to fetch listening sessions:", err);
@@ -80,29 +87,19 @@ export default function App() {
       
       setError(null);
 
-      // check health (presence of env vars)
-      const healthRes = await axios.get("/api/abs/health");
-      if (healthRes.data.error) {
-        setError(healthRes.data.error);
-        setLoading(false);
-        setSessionsLoading(false);
-        setRefreshing(false);
-        return;
-      }
-
-      // Fetch fast primary items first, excluding slow sessions call (Solution 1)
-      const [libRes, userRes, recentRes, onlineRes] = await Promise.all([
-        axios.get("/api/abs/libraries"),
-        axios.get("/api/abs/users"),
-        axios.get("/api/abs/recent"),
-        axios.get("/api/abs/users/online")
+      // Fetch fast primary items first, excluding slow sessions call
+      const [libData, userData, recentData, onlineData] = await Promise.all([
+        api.getLibraries(),
+        api.getUsers(),
+        api.getRecentItems(),
+        api.getOnlineUsers()
       ]);
 
-      setLibraries(libRes.data.libraries || libRes.data || []);
-      setUsers(userRes.data.users || userRes.data || []);
+      setLibraries(libData.libraries || libData || []);
+      setUsers(userData.users || userData || []);
       
-      const rawUsers: any[] = userRes.data.users || userRes.data || [];
-      const usersOnline: any[] = onlineRes.data.usersOnline || [];
+      const rawUsers: any[] = userData.users || userData || [];
+      const usersOnline: any[] = onlineData.usersOnline || [];
       const userMap: Record<string, string> = {};
       rawUsers.forEach((u: any) => { userMap[u.id] = u.username; });
       usersOnline.forEach((u: any) => { if (!userMap[u.id]) userMap[u.id] = u.username; });
@@ -113,7 +110,7 @@ export default function App() {
         return (Date.now() - (s.startedAt + (s.timeListening || 0) * 1000)) < STALE_THRESHOLD;
       };
 
-      const openSessions = (onlineRes.data.openSessions || [])
+      const openSessions = (onlineData.openSessions || [])
         .filter(isRecentlyActive)
         .map((s: any) => ({
           ...s,
@@ -121,7 +118,7 @@ export default function App() {
         }));
       setActiveSessions(openSessions);
       
-      const items = recentRes.data.results || recentRes.data || [];
+      const items = Array.isArray(recentData) ? recentData : (recentData.results || []);
       // Transform Audiobookshelf API response to match Book type
       const transformedBooks: Book[] = items.map((item: any) => {
         const mediaMeta = item.media?.metadata || item.metadata || { title: "Unknown Title", authorName: "Unknown Author" };
@@ -131,13 +128,13 @@ export default function App() {
           metadata: {
             title: mediaMeta.title,
             authorName: mediaMeta.authorName,
-            coverPath: `/metadata/items/${item.id}/cover.jpg`,
+            coverPath: api.getCoverPath(item.id),
           },
           addedAt: item.addedAt,
         };
       });
       setBooks(transformedBooks);
-      setTotalBooks(recentRes.data.totalBooks || 0);
+      setTotalBooks(recentData.totalBooks || 0);
 
       // Shell loaded immediately
       setLoading(false);
@@ -146,22 +143,44 @@ export default function App() {
       fetchSessions(isInitial);
     } catch (err: any) {
       console.error(err);
-      setError("Failed to connect to Audiobookshelf. Please check your ABS_URL and ABS_TOKEN.");
+      setError("Failed to connect to Audiobookshelf. Please check your credentials or network.");
       setLoading(false);
       setSessionsLoading(false);
       setRefreshing(false);
     }
   }
 
-  // Fetch data
+  // Handle Startup Connection Discovery
   useEffect(() => {
-    fetchData(true);
-    // Refresh active sessions every 30 seconds
+    async function discoverConnection() {
+      const conn = api.getConfig();
+      if (conn?.isDirect) {
+        setIsConfigured(true);
+        fetchData(true);
+      } else {
+        // If not direct, see if the Node proxy server is running and healthy
+        const health = await api.checkHealth();
+        if (health.ok) {
+          setIsConfigured(true);
+          fetchData(true);
+        } else {
+          // If proxy fails, we boot to the manual onboarding interface
+          setIsConfigured(false);
+        }
+      }
+    }
+    discoverConnection();
+  }, []);
+
+  // Set up periodic session refresher once verified configured
+  useEffect(() => {
+    if (!isConfigured) return;
+
     const interval = setInterval(async () => {
       try {
-        const onlineRes = await axios.get("/api/abs/users/online");
+        const onlineData = await api.getOnlineUsers();
         const onlineUserMap: Record<string, string> = {};
-        (onlineRes.data.usersOnline || []).forEach((u: any) => { onlineUserMap[u.id] = u.username; });
+        (onlineData.usersOnline || []).forEach((u: any) => { onlineUserMap[u.id] = u.username; });
         // Merge with existing userMap from state
         users.forEach(u => { if (!onlineUserMap[u.id]) onlineUserMap[u.id] = u.username; });
         const STALE_THRESHOLD = 10 * 60 * 1000;
@@ -169,7 +188,7 @@ export default function App() {
           if (s.updatedAt) return (Date.now() - s.updatedAt) < STALE_THRESHOLD;
           return (Date.now() - (s.startedAt + (s.timeListening || 0) * 1000)) < STALE_THRESHOLD;
         };
-        const openSessions = (onlineRes.data.openSessions || [])
+        const openSessions = (onlineData.openSessions || [])
           .filter(isRecentlyActive)
           .map((s: any) => ({
             ...s,
@@ -182,7 +201,7 @@ export default function App() {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isConfigured, users]);
 
   // Aggregate User Stats for both Dashboard and Users View
   const userStats = useMemo(() => {
@@ -320,12 +339,28 @@ export default function App() {
     return "Night";
   }
 
-  if (loading) {
+  if (isConfigured === null) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">
         <div className="text-center">
           <Activity className="animate-spin mb-4 text-indigo-600 mx-auto" size={48} />
-          <h2 className="text-xl font-bold text-slate-800">Synchronizing Dashboard...</h2>
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Initializing ShelfLife...</h2>
+          <p className="text-slate-500 mt-2 text-sm font-medium">Analyzing environment parameters.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConfigured === false) {
+    return <ConnectionScreen onSuccess={() => setIsConfigured(true)} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">
+        <div className="text-center">
+          <Activity className="animate-spin mb-4 text-indigo-600 mx-auto" size={48} />
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Synchronizing Dashboard...</h2>
           <p className="text-slate-500 mt-2 text-sm font-medium">Hold on, we're fetching your audiobooks data.</p>
         </div>
       </div>
@@ -334,23 +369,32 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-200 p-10 text-center">
           <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle size={40} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Configuration Required</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">Connection Blocked</h2>
           <p className="text-slate-600 mb-8 leading-relaxed">
             {error}
           </p>
-          <div className="space-y-3">
-            <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Steps to fix:</p>
-            <ol className="text-left text-sm text-slate-600 space-y-2 list-decimal list-inside">
-              <li>Open the <strong>Secrets</strong> panel or <code>.env</code> file.</li>
-              <li>Add <code>ABS_URL</code> with your server address.</li>
-              <li>Add <code>ABS_TOKEN</code> with your API token.</li>
-              <li>Restart the application.</li>
-            </ol>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => {
+                api.disconnect();
+                setIsConfigured(false);
+                setError(null);
+              }}
+              className="w-full py-3 bg-indigo-600 text-white rounded-2xl text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-md"
+            >
+              Reconfigure Connection
+            </button>
+            <button 
+              onClick={() => fetchData(true)}
+              className="w-full py-3 bg-slate-100 text-slate-700 rounded-2xl text-[11px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-colors"
+            >
+              Retry Connection
+            </button>
           </div>
         </div>
       </div>
@@ -474,7 +518,11 @@ export default function App() {
                 />
               )}
               {activeTab === 'settings' && (
-                <SettingsView />
+                <SettingsView onDisconnect={() => {
+                  api.disconnect();
+                  setIsConfigured(false);
+                  setActiveTab("dashboard");
+                }} />
               )}
               {activeTab === 'activity' && (
                 <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-12 text-center text-slate-400 flex flex-col items-center gap-4">

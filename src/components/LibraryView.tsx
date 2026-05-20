@@ -4,10 +4,10 @@ import {
   Search, Filter, MoreVertical, CheckCircle2, AlertCircle, Sparkles,
   ChevronRight, Calendar, User as UserIcon, Tag
 } from "lucide-react";
-import axios from "axios";
 import { Book, Library } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../lib/utils";
+import { api } from "../lib/api";
 
 interface LibraryViewProps {
   books: Book[];
@@ -34,8 +34,8 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
     if (!libId) return;
     setLoading(true);
     try {
-      const res = await axios.get(`/api/abs/libraries/${libId}/items?limit=1000`);
-      const items = res.data.results || [];
+      const res = await api.getLibraryItems(libId, { limit: 1000 });
+      const items = res.results || res || [];
       const transformed: Book[] = items.map((item: any) => {
         const mediaMeta = item.media?.metadata || item.metadata || { title: "Unknown Title", authorName: "Unknown Author" };
         return {
@@ -44,7 +44,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           metadata: {
             title: mediaMeta.title,
             authorName: mediaMeta.authorName,
-            coverPath: `/metadata/items/${item.id}/cover.jpg`,
+            coverPath: api.getCoverPath(item.id),
           },
           addedAt: item.addedAt || Date.now(),
         };
@@ -67,7 +67,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
     if (!libId) return;
     setIsRescanning(true);
     try {
-      await axios.post(`/api/abs/libraries/${libId}/scan?force=1`);
+      await api.scanLibrary(libId);
       setTimeout(async () => {
         await fetchLibraryBooks();
         setIsRescanning(false);
@@ -81,7 +81,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   const handleMatch = async (id: string) => {
     setMatchStatus(prev => ({ ...prev, [id]: 'matching' }));
     try {
-      await axios.post(`/api/abs/items/${id}/match`);
+      await api.matchLibraryItem(id);
       setMatchStatus(prev => ({ ...prev, [id]: 'success' }));
       setTimeout(() => {
         setMatchStatus(prev => ({ ...prev, [id]: null }));
