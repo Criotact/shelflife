@@ -438,6 +438,7 @@ export default function App() {
                   users={users}
                   sessions={sessions}
                   userStats={userStats}
+                  books={books}
                 />
               )}
               {activeTab === 'library' && (

@@ -66,6 +66,7 @@ const generateSessions = (): Session[] => {
             timeListening: duration,
             startedAt: startedAt.getTime(),
             mediaItemTitle: book.metadata.title,
+            progress: parseFloat((Math.random() * 0.9 + 0.1).toFixed(2)),
           });
         }
       }
