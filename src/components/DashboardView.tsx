@@ -18,6 +18,7 @@ import { formatDuration, cn } from "../lib/utils";
 import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
 import { CoverImage } from "./CoverImage";
+import { Capacitor } from "@capacitor/core";
 
 interface DashboardViewProps {
   recentBooks: Book[];
@@ -32,43 +33,22 @@ interface DashboardViewProps {
 export function DashboardView({ 
   recentBooks, totalBooks, sessions, userStats, libraries, activeSessions, sessionsLoading
 }: DashboardViewProps) {
-  const [chartView, setChartView] = useState<'total' | 'users'>('total');
+  const isAndroid = Capacitor.getPlatform() === 'android';
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
-  const [hourlyView, setHourlyView] = useState<'total' | 'users'>('total');
   const [timeframe, setTimeframe] = useState<'7' | '30' | '365' | 'all'>('30');
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
   const [selectedBookForDetails, setSelectedBookForDetails] = useState<Book | null>(null);
   const [initialModalTab, setInitialModalTab] = useState<'details' | 'match' | 'chapters'>('details');
   
-  // States for search and dynamic graph selection
+  // States for search
   const [livePlaybackSearch, setLivePlaybackSearch] = useState("");
   const [recentActivitySearch, setRecentActivitySearch] = useState("");
-  const [graphUserSearch, setGraphUserSearch] = useState("");
-  const [selectedGraphUserIds, setSelectedGraphUserIds] = useState<string[]>([]);
-  
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const filteredSessions = useMemo(() => {
     if (timeframe === 'all') return sessions;
     const cutoff = subDays(new Date(), parseInt(timeframe));
     return sessions.filter(s => isAfter(new Date(s.startedAt), cutoff));
   }, [sessions, timeframe]);
-
-  const topUsers = useMemo(() => userStats.slice(0, 5), [userStats]);
-
-  // Sync selectedGraphUserIds with top users once loaded, if currently empty
-  useEffect(() => {
-    if (selectedGraphUserIds.length === 0 && userStats.length > 0) {
-      setSelectedGraphUserIds(userStats.slice(0, 5).map(u => u.userId));
-    }
-  }, [userStats, selectedGraphUserIds]);
-
-  const selectedUsersForChart = useMemo(() => {
-    if (selectedGraphUserIds.length === 0) {
-      return userStats.slice(0, 5);
-    }
-    return userStats.filter(u => selectedGraphUserIds.includes(u.userId));
-  }, [userStats, selectedGraphUserIds]);
 
   const filteredActiveSessions = useMemo(() => {
     if (!livePlaybackSearch.trim()) return activeSessions;
@@ -147,35 +127,19 @@ export function DashboardView({
 
       if (!activity[dateStr]) {
         activity[dateStr] = { date: dateStr, hours: 0 };
-        if (chartView === 'users') {
-          selectedUsersForChart.forEach(u => { activity[dateStr][u.username] = 0; });
-        }
       }
 
-      if (chartView === 'total') {
-        activity[dateStr].hours += listeningTime;
-      } else {
-        const isSelectedUser = selectedUsersForChart.find(u => u.userId === session.userId);
-        if (isSelectedUser) {
-          activity[dateStr][isSelectedUser.username] = (activity[dateStr][isSelectedUser.username] || 0) + listeningTime;
-        }
-      }
+      activity[dateStr].hours += listeningTime;
     });
 
     return Object.values(activity)
       .map(entry => {
         const newEntry = { ...entry };
-        if (chartView === 'total') {
-          newEntry.hours = parseFloat(entry.hours.toFixed(1));
-        } else {
-          selectedUsersForChart.forEach(u => {
-            newEntry[u.username] = parseFloat((entry[u.username] || 0).toFixed(1));
-          });
-        }
+        newEntry.hours = parseFloat(entry.hours.toFixed(1));
         return newEntry;
       })
       .sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredSessions, chartView, selectedUsersForChart]);
+  }, [filteredSessions]);
 
   const hourlyActivityData = useMemo(() => {
     const cutoff = subDays(new Date(), 14).getTime();
@@ -185,11 +149,6 @@ export function DashboardView({
     for (let h = 0; h < 24; h++) {
       const label = `${h.toString().padStart(2, '0')}:00`;
       activity[h] = { hour: h, label, hours: 0 };
-      if (hourlyView === 'users') {
-        selectedUsersForChart.forEach(u => {
-          activity[h][u.username] = 0;
-        });
-      }
     }
 
     recentSessions.forEach(session => {
@@ -197,30 +156,17 @@ export function DashboardView({
       const hour = date.getHours();
       const listeningTime = (session.timeListening || session.duration || 0) / 3600;
 
-      if (hourlyView === 'total') {
-        activity[hour].hours += listeningTime;
-      } else {
-        const isSelectedUser = selectedUsersForChart.find(u => u.userId === session.userId);
-        if (isSelectedUser) {
-          activity[hour][isSelectedUser.username] = (activity[hour][isSelectedUser.username] || 0) + listeningTime;
-        }
-      }
+      activity[hour].hours += listeningTime;
     });
 
     return Object.values(activity)
       .map((entry: any) => {
         const newEntry = { ...entry };
-        if (hourlyView === 'total') {
-          newEntry.hours = parseFloat(entry.hours.toFixed(1));
-        } else {
-          selectedUsersForChart.forEach(u => {
-            newEntry[u.username] = parseFloat((entry[u.username] || 0).toFixed(1));
-          });
-        }
+        newEntry.hours = parseFloat(entry.hours.toFixed(1));
         return newEntry;
       })
       .sort((a: any, b: any) => a.hour - b.hour);
-  }, [sessions, selectedUsersForChart, hourlyView]);
+  }, [sessions]);
 
   const toggleUserExpanded = (userId: string) => {
     setExpandedUsers(prev => ({
@@ -327,8 +273,12 @@ export function DashboardView({
 
       {/* Live Playback and Recent Activity Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Live Playback Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[400px]">
+        <div className={cn(
+          "bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col transition-all duration-300",
+          filteredActiveSessions.length <= 1 
+            ? "h-auto min-h-[180px] lg:h-[400px]" 
+            : "h-[400px]"
+        )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
@@ -556,97 +506,6 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* Unified User Selector for Graphs */}
-      {(chartView === 'users' || hourlyView === 'users') && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 transition-all animate-fadeIn">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
-            <div>
-              <h4 className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <UserIcon size={12} className="text-indigo-600" />
-                Select Listeners to Compare
-              </h4>
-              <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-widest mt-0.5">
-                Toggle up to <span className="font-extrabold text-indigo-600">6</span> listeners to plot on "By User" graphs.
-              </p>
-            </div>
-            
-            {/* Mini User Search if user count is high */}
-            {userStats.length > 8 && (
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-48 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all shrink-0">
-                <Search size={10} className="text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search listeners..." 
-                  value={graphUserSearch}
-                  onChange={(e) => setGraphUserSearch(e.target.value)}
-                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-2 px-2 scroll-smooth">
-            {userStats
-              .filter(user => 
-                !graphUserSearch.trim() || 
-                user.username.toLowerCase().includes(graphUserSearch.toLowerCase())
-              )
-              .map((user) => {
-                const isSelected = selectedGraphUserIds.includes(user.userId);
-                // Find index in selected users to get matching color
-                const colorIdx = selectedGraphUserIds.indexOf(user.userId);
-                const color = colorIdx !== -1 ? COLORS[colorIdx % COLORS.length] : null;
-                
-                return (
-                  <button
-                    key={user.userId}
-                    onClick={() => {
-                      if (isSelected) {
-                        // Prevent deselecting if it's the last one (keep at least 1)
-                        if (selectedGraphUserIds.length <= 1) return;
-                        setSelectedGraphUserIds(prev => prev.filter(id => id !== user.userId));
-                      } else {
-                        if (selectedGraphUserIds.length >= 6) {
-                          // Already at maximum
-                          return;
-                        }
-                        setSelectedGraphUserIds(prev => [...prev, user.userId]);
-                      }
-                    }}
-                    disabled={!isSelected && selectedGraphUserIds.length >= 6}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-all whitespace-nowrap active:scale-95",
-                      isSelected
-                        ? "bg-white text-slate-800 shadow-sm"
-                        : "bg-slate-50 text-slate-400 border-slate-200 hover:text-slate-700 hover:bg-slate-100/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                    )}
-                    style={isSelected && color ? { borderColor: color, borderLeftWidth: '4px' } : undefined}
-                  >
-                    <span 
-                      className="w-1.5 h-1.5 rounded-full shrink-0" 
-                      style={{ backgroundColor: isSelected && color ? color : '#94a3b8' }}
-                    />
-                    {user.username}
-                  </button>
-                );
-              })}
-            {userStats.filter(user => 
-              !graphUserSearch.trim() || 
-              user.username.toLowerCase().includes(graphUserSearch.toLowerCase())
-            ).length === 0 && (
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest my-1">No matching listeners found</p>
-            )}
-          </div>
-          
-          {/* Warning banner when cap is reached */}
-          {selectedGraphUserIds.length >= 6 && (
-            <div className="text-[9px] text-amber-600 font-extrabold uppercase tracking-widest flex items-center gap-1 mt-1 animate-pulse">
-              ⚠️ Comparison limit reached (6 max). Deselect a listener to select another.
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Listening History Card */}
@@ -655,7 +514,7 @@ export function DashboardView({
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Listening History</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
-                {chartView === 'total' ? 'Global hours consumed' : 'Top 5 users intensity'}
+                Global hours consumed
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -688,21 +547,6 @@ export function DashboardView({
                   className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${chartType === 'bar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
                 >
                   Bar
-                </button>
-              </div>
-              <div className="w-px h-4 bg-slate-200 mx-1"></div>
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                <button 
-                  onClick={() => setChartView('total')}
-                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight rounded-lg transition-all ${chartView === 'total' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  Total
-                </button>
-                <button 
-                  onClick={() => setChartView('users')}
-                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight rounded-lg transition-all ${chartView === 'users' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  By User
                 </button>
               </div>
             </div>
@@ -748,28 +592,14 @@ export function DashboardView({
                         fontWeight: '600'
                       }}
                     />
-                    {chartView === 'total' ? (
-                      <Line 
-                        type="monotone" 
-                        dataKey="hours" 
-                        stroke="#6366f1" 
-                        strokeWidth={2} 
-                        dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: '#fff' }} 
-                        activeDot={{ r: 5, strokeWidth: 0 }} 
-                      />
-                    ) : (
-                      selectedUsersForChart.map((user, idx) => (
-                        <Line 
-                           key={user.userId}
-                          type="monotone" 
-                          dataKey={user.username} 
-                          stroke={COLORS[idx % COLORS.length]} 
-                          strokeWidth={2} 
-                          dot={{ r: 2, fill: COLORS[idx % COLORS.length], strokeWidth: 1, stroke: '#fff' }} 
-                          activeDot={{ r: 4, strokeWidth: 0 }} 
-                        />
-                      ))
-                    )}
+                    <Line 
+                      type="monotone" 
+                      dataKey="hours" 
+                      stroke="#6366f1" 
+                      strokeWidth={2} 
+                      dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: '#fff' }} 
+                      activeDot={{ r: 5, strokeWidth: 0 }} 
+                    />
                   </LineChart>
                 ) : (
                   <BarChart data={lineChartData}>
@@ -786,22 +616,11 @@ export function DashboardView({
                         fontWeight: '600'
                       }}
                     />
-                    {chartView === 'total' ? (
-                      <Bar 
-                        dataKey="hours" 
-                        fill="#6366f1" 
-                        radius={[4, 4, 0, 0]} 
-                      />
-                    ) : (
-                      selectedUsersForChart.map((user, idx) => (
-                        <Bar 
-                          key={user.userId}
-                          dataKey={user.username} 
-                          fill={COLORS[idx % COLORS.length]} 
-                          radius={[4, 4, 0, 0]} 
-                        />
-                      ))
-                    )}
+                    <Bar 
+                      dataKey="hours" 
+                      fill="#6366f1" 
+                      radius={[4, 4, 0, 0]} 
+                    />
                   </BarChart>
                 )}
               </ResponsiveContainer>
@@ -815,24 +634,8 @@ export function DashboardView({
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Activity Hours</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
-                {hourlyView === 'total' ? 'Peak listening times (14D)' : 'Peak times per user (14D)'}
+                Peak listening times (14D)
               </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                <button 
-                  onClick={() => setHourlyView('total')}
-                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight rounded-lg transition-all ${hourlyView === 'total' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  Total
-                </button>
-                <button 
-                  onClick={() => setHourlyView('users')}
-                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight rounded-lg transition-all ${hourlyView === 'users' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  By User
-                </button>
-              </div>
             </div>
           </div>
           {sessionsLoading ? (
@@ -870,23 +673,11 @@ export function DashboardView({
                       fontWeight: '600'
                     }}
                   />
-                  {hourlyView === 'total' ? (
-                    <Bar 
-                      dataKey="hours" 
-                      fill="#6366f1" 
-                      radius={[3, 3, 0, 0]} 
-                    />
-                  ) : (
-                    selectedUsersForChart.map((user, idx) => (
-                      <Bar 
-                        key={user.userId}
-                        dataKey={user.username} 
-                        fill={COLORS[idx % COLORS.length]} 
-                        stackId="a" 
-                        radius={[2, 2, 0, 0]} 
-                      />
-                    ))
-                  )}
+                  <Bar 
+                    dataKey="hours" 
+                    fill="#6366f1" 
+                    radius={[3, 3, 0, 0]} 
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
