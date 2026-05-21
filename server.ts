@@ -62,6 +62,30 @@ async function startServer() {
     }
   });
 
+  // Custom proxy route for login (targets root level /login)
+  app.post("/api/abs/login", express.json(), async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const xAbsUrl = req.headers['x-abs-url'] || ABS_URL;
+      const targetUrl = typeof xAbsUrl === 'string' && xAbsUrl.endsWith('/') ? xAbsUrl.slice(0, -1) : xAbsUrl;
+      
+      const response = await axios.post(
+        `${targetUrl}/login`,
+        { username, password },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          },
+          timeout: 8000
+        }
+      );
+      res.json(response.data);
+    } catch (error: any) {
+      console.error("Login proxy failed:", error.message);
+      res.status(error.response?.status || 500).json({ error: formatError(error) });
+    }
+  });
+
   // Custom proxy route for recent items (fetches from all libraries)
   app.get("/api/abs/recent", async (req, res) => {
     try {

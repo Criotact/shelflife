@@ -64,7 +64,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
         }
 
         const isNative = Capacitor.isNativePlatform();
-        const loginUrl = isNative ? `${formattedUrl}/api/login` : `/api/abs/login`;
+        const loginUrl = isNative ? `${formattedUrl}/login` : `/api/abs/login`;
 
         const loginRes = await axios.post(
           loginUrl,
