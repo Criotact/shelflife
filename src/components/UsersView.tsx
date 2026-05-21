@@ -133,6 +133,34 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
     });
   }, [selectedUserSessions, selectedUserId]);
 
+  const userHourlyActivityData = useMemo(() => {
+    if (!selectedUserId) return [];
+    const cutoff = subDays(new Date(), 14).getTime();
+    const recentSessions = selectedUserSessions.filter(s => s.startedAt >= cutoff);
+
+    const activity: Record<number, any> = {};
+    for (let h = 0; h < 24; h++) {
+      const label = `${h.toString().padStart(2, '0')}:00`;
+      activity[h] = { hour: h, label, hours: 0 };
+    }
+
+    recentSessions.forEach(session => {
+      const date = new Date(session.startedAt);
+      const hour = date.getHours();
+      const listeningTime = (session.timeListening || session.duration || 0) / 3600;
+
+      activity[hour].hours += listeningTime;
+    });
+
+    return Object.values(activity)
+      .map((entry: any) => {
+        const newEntry = { ...entry };
+        newEntry.hours = parseFloat(entry.hours.toFixed(1));
+        return newEntry;
+      })
+      .sort((a: any, b: any) => a.hour - b.hour);
+  }, [selectedUserSessions, selectedUserId]);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       {/* Sidebar List */}
@@ -286,33 +314,45 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                 )}
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2">
-                <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight mb-2">Listener Profile</h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight mb-4">Active Hours (14 Days)</h3>
                 {sessionsLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 border border-slate-100/50 animate-pulse">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-slate-200 rounded-full" />
-                        <div className="w-16 h-2.5 bg-slate-200 rounded" />
-                      </div>
-                      <div className="w-12 h-3.5 bg-slate-200 rounded" />
+                  <div className="h-[180px] w-full flex flex-col justify-end gap-3 p-2 bg-slate-50/50 rounded-xl animate-pulse relative overflow-hidden select-none">
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/40">
+                      <Clock size={20} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
                     </div>
-                  ))
+                    <div className="flex items-end justify-between h-[120px] px-1 opacity-30">
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <div key={i} className="w-1 bg-slate-200 rounded-t-sm" style={{ height: `${(i % 5) * 20 + 20}%` }} />
+                      ))}
+                    </div>
+                    <div className="flex justify-between border-t border-slate-200/50 pt-2 px-1 opacity-20">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="w-6 h-2 bg-slate-200 rounded-sm" />
+                      ))}
+                    </div>
+                  </div>
                 ) : (
-                  [
-                    { label: "Top Genre", value: selectedUserStats?.topGenre || "Mixed", icon: Music },
-                    { label: "Preferred Time", value: selectedUserStats?.preferredTime || "Varies", icon: Clock },
-                    { label: "Device Usage", value: selectedUserStats?.deviceUsage || "Web Client", icon: LayoutGrid },
-                    { label: "Completion Rate", value: `${selectedUserStats?.completionRate || 0}%`, icon: TrendingUp },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <item.icon size={12} className="text-slate-400" />
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">{item.label}</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-slate-900">{item.value}</span>
-                    </div>
-                  ))
+                  <div className="h-[180px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={userHourlyActivityData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#94a3b8', fontWeight: 600 }} interval={3} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#94a3b8', fontWeight: 600 }} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: '#fff', 
+                            borderRadius: '8px', 
+                            border: 'none', 
+                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                            fontSize: '10px',
+                            fontWeight: '600'
+                          }}
+                        />
+                        <Bar dataKey="hours" fill="#6366f1" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 )}
               </div>
             </div>
