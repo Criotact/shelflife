@@ -213,9 +213,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
-                  <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3">Title / Author</th>
-                  <th className="px-5 py-3">Library Node</th>
                   <th className="px-5 py-3">Index Time</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
@@ -223,14 +221,14 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
               <tbody className="divide-y divide-slate-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center">
+                    <td colSpan={3} className="px-5 py-12 text-center">
                       <RefreshCw size={20} className="animate-spin text-indigo-600 mx-auto mb-2" />
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Syncing repository contents...</p>
                     </td>
                   </tr>
                 ) : paginatedBooks.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center">
+                    <td colSpan={3} className="px-5 py-12 text-center">
                       <AlertCircle size={20} className="text-slate-400 mx-auto mb-2" />
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No assets match your search</p>
                     </td>
@@ -246,11 +244,6 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                       className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
                     >
                       <td className="px-5 py-3">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                          <CheckCircle2 size={14} />
-                        </div>
-                      </td>
-                      <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300 relative">
                             <CoverImage
@@ -263,14 +256,6 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                             <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
                             <p className="text-[9px] text-slate-500 font-medium">{book.metadata?.authorName}</p>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-1.5">
-                           <Tag size={10} className="text-slate-400" />
-                           <span className="text-[10px] font-semibold text-slate-600">
-                            {libraries.find(l => l.id === book.libraryId)?.name || "Default Library"}
-                           </span>
                         </div>
                       </td>
                       <td className="px-5 py-3">

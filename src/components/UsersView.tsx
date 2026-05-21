@@ -388,7 +388,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                 <table className="w-full text-left">
                   <thead className="bg-slate-50/50">
                     <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
-                      <th className="px-4 py-2">Status</th>
                       <th className="px-4 py-2">
                         {viewMode === 'full-log' ? "Title" : "Book Title"}
                       </th>
@@ -404,9 +403,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                     {sessionsLoading ? (
                       Array.from({ length: 5 }).map((_, rIdx) => (
                         <tr key={rIdx} className="animate-pulse bg-white/20 select-none">
-                          <td className="px-4 py-3">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 inline-block" />
-                          </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded bg-slate-200 shrink-0" />
@@ -431,12 +427,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                           const { matchedBook, progressPercent } = getSessionBookInfo(lastSession);
                           return (
                             <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
-                              <td className="px-4 py-2">
-                                <span className={cn(
-                                  "w-1.5 h-1.5 rounded-full inline-block",
-                                  lastSession.isActive ? "bg-indigo-500 animate-pulse" : "bg-emerald-400"
-                                )} />
-                              </td>
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
                                   {matchedBook?.id ? (
@@ -468,9 +458,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                           </div>
                                         </div>
                                       )}
-                                      <span className="text-[8px] text-slate-400 font-medium">
-                                        ID: {lastSession.id.split('_').pop()}
-                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -487,7 +474,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                         })
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
+                          <td colSpan={3} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
                             No books matched the selected progress filter.
                           </td>
                         </tr>
@@ -497,12 +484,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                         const { matchedBook, progressPercent } = getSessionBookInfo(session);
                         return (
                           <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
-                            <td className="px-4 py-2">
-                              <span className={cn(
-                                "w-1.5 h-1.5 rounded-full inline-block",
-                                session.isActive ? "bg-indigo-500 animate-pulse" : "bg-emerald-400"
-                              )} />
-                            </td>
                             <td className="px-4 py-2">
                               <div className="flex items-center gap-3">
                                 {matchedBook?.id ? (
@@ -534,9 +515,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                         </div>
                                       </div>
                                     )}
-                                    <span className="text-[8px] text-slate-400 font-medium">
-                                      ID: {session.id.split('_').pop()}
-                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -557,12 +535,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                           const { matchedBook, progressPercent } = getSessionBookInfo(lastSession);
                           return (
                             <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
-                              <td className="px-4 py-2">
-                                <span className={cn(
-                                  "w-1.5 h-1.5 rounded-full inline-block",
-                                  lastSession.isActive ? "bg-indigo-500 animate-pulse" : "bg-emerald-400"
-                                )} />
-                              </td>
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
                                   {matchedBook?.id ? (
@@ -594,9 +566,6 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                           </div>
                                         </div>
                                       )}
-                                      <span className="text-[8px] text-slate-400 font-medium">
-                                        ID: {lastSession.id.split('_').pop()}
-                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -613,7 +582,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                         })
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
+                          <td colSpan={3} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
                             No books listened to in the last 14 days. Select "All Books" or "Full Log" to see historical data.
                           </td>
                         </tr>
