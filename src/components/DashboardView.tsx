@@ -352,8 +352,12 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Recent Activity Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[400px]">
+        <div className={cn(
+          "bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col transition-all duration-300",
+          (sessionsLoading || filteredRecentActivityGrouped.length > 1)
+            ? "h-[400px]" 
+            : "h-auto min-h-[180px] lg:h-[400px]"
+        )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Recent Activity (7 Days)</h3>
