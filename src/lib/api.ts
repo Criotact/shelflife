@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { MatchCandidate } from "../types";
+import { getItem, setItem, removeItem } from "./storage";
 
 export interface ConnectionConfig {
   url: string;
@@ -12,13 +13,13 @@ class ApiClient {
   private config: ConnectionConfig | null = null;
 
   constructor() {
-    this.initialize();
+    // initialize must be called asynchronously at startup
   }
 
   // Load connection config from storage or fallback to server env
-  public initialize() {
-    const url = localStorage.getItem("ABS_URL");
-    const token = localStorage.getItem("ABS_TOKEN");
+  public async initialize() {
+    const url = await getItem("ABS_URL");
+    const token = await getItem("ABS_TOKEN");
 
     if (url && token) {
       this.config = {
@@ -55,18 +56,18 @@ class ApiClient {
   }
 
   // Save direct credentials
-  public saveConnection(url: string, token: string) {
+  public async saveConnection(url: string, token: string) {
     const cleanUrl = url.endsWith("/") ? url.slice(0, -1) : url;
-    localStorage.setItem("ABS_URL", cleanUrl);
-    localStorage.setItem("ABS_TOKEN", token);
-    this.initialize();
+    await setItem("ABS_URL", cleanUrl);
+    await setItem("ABS_TOKEN", token);
+    await this.initialize();
   }
 
   // Clear credentials (logout)
-  public disconnect() {
-    localStorage.removeItem("ABS_URL");
-    localStorage.removeItem("ABS_TOKEN");
-    this.initialize();
+  public async disconnect() {
+    await removeItem("ABS_URL");
+    await removeItem("ABS_TOKEN");
+    await this.initialize();
   }
 
   // Get cover path dynamically based on connection mode

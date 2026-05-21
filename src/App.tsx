@@ -164,6 +164,7 @@ export default function App() {
   // Handle Startup Connection Discovery
   useEffect(() => {
     async function discoverConnection() {
+      await api.initialize();
       const conn = api.getConfig();
       if (conn?.isDirect) {
         setIsConfigured(true);
@@ -398,8 +399,8 @@ export default function App() {
           </p>
           <div className="flex flex-col gap-3">
             <button 
-              onClick={() => {
-                api.disconnect();
+              onClick={async () => {
+                await api.disconnect();
                 setIsConfigured(false);
                 setError(null);
               }}
@@ -517,8 +518,8 @@ export default function App() {
                 />
               )}
               {activeTab === 'settings' && (
-                <SettingsView onDisconnect={() => {
-                  api.disconnect();
+                <SettingsView onDisconnect={async () => {
+                  await api.disconnect();
                   setIsConfigured(false);
                   setActiveTab("dashboard");
                 }} />

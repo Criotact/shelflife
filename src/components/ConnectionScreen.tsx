@@ -88,7 +88,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
       }
 
       // Initialize API client temporarily to verify config
-      api.saveConnection(formattedUrl, resolvedToken);
+      await api.saveConnection(formattedUrl, resolvedToken);
       const health = await api.checkHealth();
 
       if (health.ok) {
@@ -97,7 +97,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
           onSuccess();
         }, 1200);
       } else {
-        api.disconnect(); // Clear credentials
+        await api.disconnect(); // Clear credentials
         setStatus({
           type: "error",
           message: health.error || "Connection verified, but authorization failed.",
@@ -105,7 +105,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
       }
     } catch (err: any) {
       console.error(err);
-      api.disconnect(); // Clear credentials
+      await api.disconnect(); // Clear credentials
       let errorMsg = "Could not reach server. Verify the URL is correct and online.";
       
       if (err.response) {
