@@ -18,3 +18,12 @@ View your app in AI Studio: https://ai.studio/apps/658bc348-0437-4fce-9b52-46167
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Security Considerations
+
+When running ShelfLife with server-side credentials (`ABS_URL` and `ABS_TOKEN` in `.env`), the Express proxy does **not** authenticate incoming requests. Any client that can reach the ShelfLife server can access your Audiobookshelf instance through the proxy.
+
+**Recommendations:**
+- Only run in pre-configured mode on trusted local networks.
+- If exposing to the internet, place ShelfLife behind a reverse proxy with authentication (e.g. Cloudflare Access, Authelia, or basic auth at the reverse proxy level).
+- On Android or untrusted networks, use the login screen (User Login mode), which stores credentials per-device and does not rely on server-side tokens.
