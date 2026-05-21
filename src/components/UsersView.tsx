@@ -10,6 +10,7 @@ import { format, formatDistanceToNow, subDays } from "date-fns";
 import { User, Session, UserStats, Book } from "../types";
 import { ActivityHeatmap } from "./ActivityHeatmap";
 import { formatDuration, cn } from "../lib/utils";
+import { CoverImage } from "./CoverImage";
 
 interface UsersViewProps {
   users: User[];
@@ -76,13 +77,12 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
   const getSessionBookInfo = (session: Session) => {
     const title = session.displayTitle || session.mediaItemTitle || "Unknown Book";
     const matchedBook = books.find(b => b.metadata.title.toLowerCase() === title.toLowerCase());
-    const coverUrl = matchedBook?.metadata?.coverPath || `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
     const progressPercent = session.progress !== undefined 
       ? Math.round(session.progress * 100) 
       : (session.currentTime && session.duration 
         ? Math.round((session.currentTime / session.duration) * 100) 
         : null);
-    return { coverUrl, progressPercent };
+    return { matchedBook, progressPercent };
   };
 
   const allUserBooks = useMemo(() => {
@@ -428,7 +428,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                     ) : viewMode === 'all-books' ? (
                       filteredAllUserBooks.length > 0 ? (
                         filteredAllUserBooks.map(({ title, lastSession }) => {
-                          const { coverUrl, progressPercent } = getSessionBookInfo(lastSession);
+                          const { matchedBook, progressPercent } = getSessionBookInfo(lastSession);
                           return (
                             <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
                               <td className="px-4 py-2">
@@ -439,14 +439,19 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                               </td>
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
-                                  <img 
-                                    src={coverUrl} 
-                                    alt={title} 
-                                    className="w-8 h-8 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
-                                    }}
-                                  />
+                                  {matchedBook?.id ? (
+                                    <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 relative">
+                                      <CoverImage 
+                                        itemId={matchedBook.id} 
+                                        title={title} 
+                                        className="w-full h-full object-cover animate-fade-in" 
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 aspect-square rounded bg-slate-100 shrink-0 border border-slate-200/50 flex items-center justify-center text-slate-400">
+                                      <BookOpen size={14} />
+                                    </div>
+                                  )}
                                   <div>
                                     <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{title}</p>
                                     <div className="flex items-center gap-2 mt-1">
@@ -489,7 +494,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                       )
                     ) : viewMode === 'full-log' ? (
                       selectedUserSessions.map((session) => {
-                        const { coverUrl, progressPercent } = getSessionBookInfo(session);
+                        const { matchedBook, progressPercent } = getSessionBookInfo(session);
                         return (
                           <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
                             <td className="px-4 py-2">
@@ -500,15 +505,19 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                             </td>
                             <td className="px-4 py-2">
                               <div className="flex items-center gap-3">
-                                <img 
-                                  src={coverUrl} 
-                                  alt={session.displayTitle || session.mediaItemTitle} 
-                                  className="w-8 h-8 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
-                                  onError={(e) => {
-                                    const title = session.displayTitle || session.mediaItemTitle || "Book";
-                                    (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
-                                  }}
-                                />
+                                {matchedBook?.id ? (
+                                  <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 relative">
+                                    <CoverImage 
+                                      itemId={matchedBook.id} 
+                                      title={session.displayTitle || session.mediaItemTitle} 
+                                      className="w-full h-full object-cover animate-fade-in" 
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 aspect-square rounded bg-slate-100 shrink-0 border border-slate-200/50 flex items-center justify-center text-slate-400">
+                                    <BookOpen size={14} />
+                                  </div>
+                                )}
                                 <div>
                                   <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{session.displayTitle || session.mediaItemTitle}</p>
                                   <div className="flex items-center gap-2 mt-1">
@@ -545,7 +554,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                     ) : (
                       last14DaysBooks.length > 0 ? (
                         last14DaysBooks.map(({ title, lastSession }) => {
-                          const { coverUrl, progressPercent } = getSessionBookInfo(lastSession);
+                          const { matchedBook, progressPercent } = getSessionBookInfo(lastSession);
                           return (
                             <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
                               <td className="px-4 py-2">
@@ -556,14 +565,19 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                               </td>
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
-                                  <img 
-                                    src={coverUrl} 
-                                    alt={title} 
-                                    className="w-8 h-8 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
-                                    }}
-                                  />
+                                  {matchedBook?.id ? (
+                                    <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 relative">
+                                      <CoverImage 
+                                        itemId={matchedBook.id} 
+                                        title={title} 
+                                        className="w-full h-full object-cover animate-fade-in" 
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 aspect-square rounded bg-slate-100 shrink-0 border border-slate-200/50 flex items-center justify-center text-slate-400">
+                                      <BookOpen size={14} />
+                                    </div>
+                                  )}
                                   <div>
                                     <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{title}</p>
                                     <div className="flex items-center gap-2 mt-1">

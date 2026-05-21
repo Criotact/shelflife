@@ -1,6 +1,7 @@
 import { Book } from "../types";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { CoverImage } from "./CoverImage";
 
 interface RecentItemsProps {
   items: Book[];
@@ -22,19 +23,11 @@ export function RecentItems({ items, onBookClick }: RecentItemsProps) {
             onClick={() => onBookClick?.(book)}
           >
             <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 shadow-sm border border-slate-200 relative">
-              {book.metadata?.coverPath ? (
-                <img 
-                  src={book.metadata.coverPath} 
-                  alt={book.metadata.title || "Book cover"} 
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover aspect-square"
-                  onError={(e) => (e.currentTarget.style.display = 'none')}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-300">
-                  <BookOpen size={16} />
-                </div>
-              )}
+              <CoverImage
+                itemId={book.id}
+                title={book.metadata?.title}
+                className="w-full h-full object-cover aspect-square"
+              />
             </div>
             <div className="flex flex-col justify-center min-w-0 flex-1">
               <span className="text-[11px] font-bold truncate text-slate-900 mb-0.5 group-hover:text-indigo-600 transition-colors">

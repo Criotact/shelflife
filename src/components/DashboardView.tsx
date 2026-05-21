@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { 
   Activity, Play, User as UserIcon,
-  ChevronDown, ChevronRight, PenTool, Compass, Tags, Search
+  ChevronDown, ChevronRight, PenTool, Compass, Tags, Search, BookOpen
 } from "lucide-react";
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -17,6 +17,7 @@ import { RecentItems } from "./RecentItems";
 import { formatDuration, cn } from "../lib/utils";
 import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
+import { CoverImage } from "./CoverImage";
 
 interface DashboardViewProps {
   recentBooks: Book[];
@@ -311,13 +312,12 @@ export function DashboardView({
   const getSessionBookInfo = (session: Session) => {
     const title = session.displayTitle || session.mediaItemTitle || "Unknown Book";
     const matchedBook = recentBooks.find(b => b.metadata.title.toLowerCase() === title.toLowerCase());
-    const coverUrl = matchedBook?.metadata?.coverPath || `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
     const progressPercent = session.progress !== undefined 
       ? Math.round(session.progress * 100) 
       : (session.currentTime && session.duration 
         ? Math.round((session.currentTime / session.duration) * 100) 
         : null);
-    return { coverUrl, progressPercent };
+    return { matchedBook, progressPercent };
   };
 
   return (
@@ -484,17 +484,22 @@ export function DashboardView({
                       {!isCollapsed && (
                         <div className="flex flex-col gap-1.5 px-1 pb-1">
                           {user.uniqueBooks.map(({ title, lastSession }) => {
-                            const { coverUrl, progressPercent } = getSessionBookInfo(lastSession);
+                            const { matchedBook, progressPercent } = getSessionBookInfo(lastSession);
                             return (
                               <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-100 transition-all group/book">
-                                <img 
-                                  src={coverUrl} 
-                                  alt={title} 
-                                  className="w-7 h-7 aspect-square rounded object-cover shadow-sm bg-slate-100 shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${encodeURIComponent(title)}/300/450`;
-                                  }}
-                                />
+                                {matchedBook?.id ? (
+                                  <div className="w-7 h-7 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform relative">
+                                    <CoverImage 
+                                      itemId={matchedBook.id} 
+                                      title={title} 
+                                      className="w-full h-full object-cover animate-fade-in" 
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-7 h-7 aspect-square rounded bg-slate-100 shrink-0 border border-slate-200/50 flex items-center justify-center text-slate-400 group-hover/book:scale-105 transition-transform">
+                                    <BookOpen size={12} />
+                                  </div>
+                                )}
                                 <div className="flex-grow min-w-0">
                                   <p className="text-[10px] font-bold text-slate-800 truncate group-hover/book:text-indigo-600 transition-colors">{title}</p>
                                   <div className="flex items-center gap-2 mt-0.5">

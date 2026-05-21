@@ -73,9 +73,30 @@ class ApiClient {
   public getCoverPath(itemId: string): string {
     if (this.config?.isDirect && this.config.url) {
       const encodedUrl = encodeURIComponent(this.config.url);
-      return `/metadata/items/${itemId}/cover.jpg?absUrl=${encodedUrl}&token=${this.config.token}`;
+      return `/metadata/items/${itemId}/cover.jpg?absUrl=${encodedUrl}`;
     }
     return `/metadata/items/${itemId}/cover.jpg`;
+  }
+
+  // Fetch cover as secure blob URL with proper credentials in headers
+  public async fetchCoverAsBlob(itemId: string): Promise<string | null> {
+    const coverPath = this.getCoverPath(itemId);
+    try {
+      const headers: Record<string, string> = {};
+      if (this.config?.token) {
+        headers["Authorization"] = `Bearer ${this.config.token}`;
+      }
+      if (this.config?.isDirect && this.config.url) {
+        headers["X-ABS-URL"] = this.config.url;
+      }
+      const response = await fetch(coverPath, { headers });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (err) {
+      console.error("Failed to fetch cover as blob:", err);
+      return null;
+    }
   }
 
   // Health check to test if server is reachable

@@ -200,12 +200,17 @@ async function startServer() {
     },
     on: {
       proxyReq: (proxyReq, req) => {
-        const parsedUrl = new URL(req.url || "", "http://localhost");
-        const queryToken = parsedUrl.searchParams.get("token");
-        if (queryToken) {
-          proxyReq.setHeader('Authorization', `Bearer ${queryToken}`);
-        } else if (ABS_TOKEN) {
-          proxyReq.setHeader('Authorization', `Bearer ${ABS_TOKEN}`);
+        const clientAuth = req.headers['authorization'];
+        if (clientAuth) {
+          proxyReq.setHeader('Authorization', typeof clientAuth === 'string' ? clientAuth : '');
+        } else {
+          const parsedUrl = new URL(req.url || "", "http://localhost");
+          const queryToken = parsedUrl.searchParams.get("token");
+          if (queryToken) {
+            proxyReq.setHeader('Authorization', `Bearer ${queryToken}`);
+          } else if (ABS_TOKEN) {
+            proxyReq.setHeader('Authorization', `Bearer ${ABS_TOKEN}`);
+          }
         }
       },
       error: (err, req, res: any) => {

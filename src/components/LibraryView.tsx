@@ -10,6 +10,7 @@ import { cn } from "../lib/utils";
 import { api } from "../lib/api";
 import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
+import { CoverImage } from "./CoverImage";
 
 interface LibraryViewProps {
   books: Book[];
@@ -251,17 +252,12 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300">
-                            {book.metadata?.coverPath ? (
-                              <img 
-                                src={book.metadata.coverPath} 
-                                alt={book.metadata.title}
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full object-cover aspect-square"
-                              />
-                            ) : (
-                              <BookOpen size={16} />
-                            )}
+                          <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300 relative">
+                            <CoverImage
+                              itemId={book.id}
+                              title={book.metadata?.title}
+                              className="w-full h-full object-cover aspect-square"
+                            />
                           </div>
                           <div>
                             <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
@@ -329,16 +325,11 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                   className="group flex flex-col gap-2 cursor-pointer"
                 >
                   <div className="w-full aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm group-hover:shadow-md group-hover:border-indigo-200 transition-all relative flex items-center justify-center text-slate-300">
-                    {book.metadata?.coverPath ? (
-                      <img 
-                        src={book.metadata.coverPath} 
-                        alt={book.metadata.title}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover aspect-square"
-                      />
-                    ) : (
-                      <BookOpen size={32} />
-                    )}
+                    <CoverImage
+                      itemId={book.id}
+                      title={book.metadata?.title}
+                      className="w-full h-full object-cover aspect-square"
+                    />
                     
                     <div className="absolute top-2 right-2 flex gap-1">
                       {matchStatus[book.id] === 'success' ? (

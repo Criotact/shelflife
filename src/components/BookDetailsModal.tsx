@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Book, MatchCandidate } from "../types";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
+import { CoverImage } from "./CoverImage";
 
 interface BookDetailsModalProps {
   book: Book;
@@ -355,18 +356,11 @@ export function BookDetailsModal({ book, initialTab = "details", onClose, onMatc
                   {/* Left Column - Cover and Pills */}
                   <div className="md:col-span-4 flex flex-col gap-4">
                     <div className="aspect-square bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-md flex items-center justify-center text-slate-300 relative group hover:scale-[1.01] transition-transform">
-                      <img
-                        src={api.getCoverPath(book.id)}
-                        alt={displayTitle}
-                        referrerPolicy="no-referrer"
+                      <CoverImage
+                        itemId={book.id}
+                        title={displayTitle}
                         className="w-full h-full object-cover aspect-square"
-                        onError={(e) => {
-                          // Fallback: hide broken image, show icon
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.nextElementSibling?.removeAttribute("hidden");
-                        }}
                       />
-                      <BookOpen size={48} hidden />
                     </div>
 
                     {/* Quick Stats Pill */}
