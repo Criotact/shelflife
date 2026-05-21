@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import axios from "axios";
 import { api } from "../lib/api";
+import { Capacitor } from "@capacitor/core";
 
 interface ConnectionScreenProps {
   onSuccess: () => void;
@@ -62,13 +63,16 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
           return;
         }
 
+        const isNative = Capacitor.isNativePlatform();
+        const loginUrl = isNative ? `${formattedUrl}/api/login` : `/api/abs/login`;
+
         const loginRes = await axios.post(
-          `/api/abs/login`,
+          loginUrl,
           { username, password },
           { 
             headers: { 
               "Content-Type": "application/json",
-              "X-ABS-URL": formattedUrl
+              ...(isNative ? {} : { "X-ABS-URL": formattedUrl })
             }, 
             timeout: 8000 
           }

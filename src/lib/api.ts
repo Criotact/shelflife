@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { MatchCandidate } from "../types";
 import { getItem, setItem, removeItem } from "./storage";
+import { Capacitor } from "@capacitor/core";
 
 export interface ConnectionConfig {
   url: string;
@@ -20,6 +21,7 @@ class ApiClient {
   public async initialize() {
     const url = await getItem("ABS_URL");
     const token = await getItem("ABS_TOKEN");
+    const isNative = Capacitor.isNativePlatform();
 
     if (url && token) {
       this.config = {
@@ -28,21 +30,21 @@ class ApiClient {
         isDirect: true,
       };
       this.client = axios.create({
-        baseURL: "/api/abs",
+        baseURL: isNative ? `${this.config.url}/api` : "/api/abs",
         headers: {
-          "X-ABS-URL": this.config.url,
+          ...(isNative ? {} : { "X-ABS-URL": this.config.url }),
           Authorization: `Bearer ${token}`,
         },
       });
     } else {
       // Proxy Mode Fallback (reads relative from server hosting the web app)
       this.config = {
-        url: window.location.origin,
+        url: isNative ? "http://localhost" : window.location.origin,
         token: "",
         isDirect: false,
       };
       this.client = axios.create({
-        baseURL: "/api/abs",
+        baseURL: isNative ? "http://localhost/api" : "/api/abs",
       });
     }
   }
@@ -72,6 +74,10 @@ class ApiClient {
 
   // Get cover path dynamically based on connection mode
   public getCoverPath(itemId: string): string {
+    const isNative = Capacitor.isNativePlatform();
+    if (isNative && this.config?.url) {
+      return `${this.config.url}/api/items/${itemId}/cover`;
+    }
     if (this.config?.isDirect && this.config.url) {
       const encodedUrl = encodeURIComponent(this.config.url);
       return `/metadata/items/${itemId}/cover.jpg?absUrl=${encodedUrl}`;
@@ -106,11 +112,21 @@ class ApiClient {
       return { ok: false, error: "API client not initialized" };
     }
 
+    const isNative = Capacitor.isNativePlatform();
+
     try {
-      // Both modes call the Express backend's health route via proxy
-      const response = await this.client.get("/health");
-      if (response.data?.error) {
-        return { ok: false, error: `Could not connect to host at ${this.config?.url || 'Audiobookshelf'}. Error: ${response.data.error}` };
+      if (isNative) {
+        if (this.config?.url) {
+          await axios.get(`${this.config.url}/ping`, { timeout: 5000 });
+        } else {
+          return { ok: false, error: "No URL configured" };
+        }
+      } else {
+        // Both modes call the Express backend's health route via proxy
+        const response = await this.client.get("/health");
+        if (response.data?.error) {
+          return { ok: false, error: `Could not connect to host at ${this.config?.url || 'Audiobookshelf'}. Error: ${response.data.error}` };
+        }
       }
 
       // Test credentials/token by loading libraries
