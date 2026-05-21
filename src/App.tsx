@@ -371,7 +371,10 @@ export default function App() {
   }
 
   if (isConfigured === false) {
-    return <ConnectionScreen onSuccess={() => setIsConfigured(true)} />;
+    return <ConnectionScreen onSuccess={() => {
+      setIsConfigured(true);
+      fetchData(true);
+    }} />;
   }
 
   if (loading) {
