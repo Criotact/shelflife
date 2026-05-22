@@ -33,7 +33,7 @@ export function RecentItems({ items, onBookClick }: RecentItemsProps) {
               <span className="text-[11px] font-bold truncate text-slate-900 mb-0.5 group-hover:text-indigo-600 transition-colors">
                 {book.metadata?.title || "Unknown Title"}
               </span>
-              <span className="text-[9px] text-slate-500 font-medium truncate mb-1">
+              <span className="text-xs text-slate-500 font-medium truncate mb-1">
                 {book.metadata?.authorName || "Unknown Author"}
               </span>
               <div className="flex items-center justify-between">

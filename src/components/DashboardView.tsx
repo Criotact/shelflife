@@ -763,9 +763,6 @@ export function DashboardView({
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <span className="text-[8px] font-extrabold text-slate-400 w-6 text-right">
-                        {percent}%
-                      </span>
                     </div>
                   </div>
                 );
@@ -821,9 +818,6 @@ export function DashboardView({
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <span className="text-[8px] font-extrabold text-slate-400 w-6 text-right">
-                        {percent}%
-                      </span>
                     </div>
                   </div>
                 );
