@@ -7,6 +7,7 @@ export interface ConnectionConfig {
   url: string;
   token: string;
   isDirect: boolean;
+  extraHeaders: Record<string, string>;
 }
 
 class ApiClient {
@@ -21,18 +22,38 @@ class ApiClient {
   public async initialize() {
     const url = await getItem("ABS_URL");
     const token = await getItem("ABS_TOKEN");
+    const extraHeadersRaw = await getItem("ABS_EXTRA_HEADERS");
     const isNative = Capacitor.isNativePlatform();
+
+    let extraHeaders: Record<string, string> = {};
+    if (extraHeadersRaw) {
+      try {
+        extraHeaders = JSON.parse(extraHeadersRaw);
+      } catch {
+        console.warn("ABS_EXTRA_HEADERS in storage is not valid JSON — ignoring.");
+      }
+    }
 
     if (url && token) {
       this.config = {
         url: url.endsWith("/") ? url.slice(0, -1) : url,
         token,
         isDirect: true,
+        extraHeaders,
       };
       this.client = axios.create({
         baseURL: isNative ? `${this.config.url}/api` : "/api/abs",
         headers: {
-          ...(isNative ? {} : { "X-ABS-URL": this.config.url }),
+          ...(isNative
+            // Native: send extra headers (e.g. CF-Access-*) directly to ABS
+            ? extraHeaders
+            // Web proxy: send extra headers via envelope header for server to unpack
+            : {
+                "X-ABS-URL": this.config.url,
+                ...(Object.keys(extraHeaders).length > 0
+                  ? { "X-ABS-Extra-Headers": JSON.stringify(extraHeaders) }
+                  : {}),
+              }),
           Authorization: `Bearer ${token}`,
         },
       });
@@ -42,11 +63,28 @@ class ApiClient {
         url: isNative ? "http://localhost" : window.location.origin,
         token: "",
         isDirect: false,
+        extraHeaders,
       };
       this.client = axios.create({
         baseURL: isNative ? "http://localhost/api" : "/api/abs",
+        headers:
+          Object.keys(extraHeaders).length > 0
+            ? { "X-ABS-Extra-Headers": JSON.stringify(extraHeaders) }
+            : {},
       });
     }
+
+    this.client.interceptors.response.use((response) => {
+      const contentType = response.headers?.['content-type'];
+      const contentTypeStr = typeof contentType === 'string' ? contentType : '';
+      if (
+        contentTypeStr.includes('text/html') ||
+        (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE'))
+      ) {
+        throw new Error('Upstream returned HTML instead of JSON. This typically indicates a Cloudflare Access or authentication gateway challenge.');
+      }
+      return response;
+    });
   }
 
   public getConfig(): ConnectionConfig | null {
@@ -57,11 +95,26 @@ class ApiClient {
     return !!this.config?.isDirect;
   }
 
-  // Save direct credentials
-  public async saveConnection(url: string, token: string) {
+  // Save direct credentials (and optional extra headers)
+  public async saveConnection(url: string, token: string, extraHeaders?: Record<string, string>) {
     const cleanUrl = url.endsWith("/") ? url.slice(0, -1) : url;
     await setItem("ABS_URL", cleanUrl);
     await setItem("ABS_TOKEN", token);
+    if (extraHeaders && Object.keys(extraHeaders).length > 0) {
+      await setItem("ABS_EXTRA_HEADERS", JSON.stringify(extraHeaders));
+    } else {
+      await removeItem("ABS_EXTRA_HEADERS");
+    }
+    await this.initialize();
+  }
+
+  // Save extra headers separately (e.g. from Settings)
+  public async saveExtraHeaders(extraHeaders: Record<string, string>) {
+    if (Object.keys(extraHeaders).length > 0) {
+      await setItem("ABS_EXTRA_HEADERS", JSON.stringify(extraHeaders));
+    } else {
+      await removeItem("ABS_EXTRA_HEADERS");
+    }
     await this.initialize();
   }
 
@@ -69,6 +122,7 @@ class ApiClient {
   public async disconnect() {
     await removeItem("ABS_URL");
     await removeItem("ABS_TOKEN");
+    await removeItem("ABS_EXTRA_HEADERS");
     await this.initialize();
   }
 
@@ -89,12 +143,22 @@ class ApiClient {
   public async fetchCoverAsBlob(itemId: string): Promise<string | null> {
     const coverPath = this.getCoverPath(itemId);
     try {
+      const isNative = Capacitor.isNativePlatform();
       const headers: Record<string, string> = {};
       if (this.config?.token) {
         headers["Authorization"] = `Bearer ${this.config.token}`;
       }
-      if (this.config?.isDirect && this.config.url) {
+      if (this.config?.isDirect && this.config.url && !isNative) {
         headers["X-ABS-URL"] = this.config.url;
+      }
+      // Include extra headers: directly for native, via envelope for web
+      const extraHeaders = this.config?.extraHeaders || {};
+      if (Object.keys(extraHeaders).length > 0) {
+        if (isNative) {
+          Object.assign(headers, extraHeaders);
+        } else {
+          headers["X-ABS-Extra-Headers"] = JSON.stringify(extraHeaders);
+        }
       }
       const response = await fetch(coverPath, { headers });
       if (!response.ok) return null;
@@ -117,7 +181,11 @@ class ApiClient {
     try {
       if (isNative) {
         if (this.config?.url) {
-          await axios.get(`${this.config.url}/ping`, { timeout: 5000 });
+          const extraHeaders = this.config?.extraHeaders || {};
+          await axios.get(`${this.config.url}/ping`, {
+            timeout: 5000,
+            headers: extraHeaders,
+          });
         } else {
           return { ok: false, error: "No URL configured" };
         }

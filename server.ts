@@ -4,6 +4,7 @@ import path from "path";
 import axios from "axios";
 import dotenv from "dotenv";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import type { IncomingMessage } from "http";
 
 dotenv.config();
 
@@ -17,8 +18,31 @@ async function startServer() {
   }
   const ABS_TOKEN = process.env.ABS_TOKEN;
 
+  // Parse optional extra headers (e.g. Cloudflare Access service tokens)
+  let envExtraHeaders: Record<string, string> = {};
+  if (process.env.ABS_EXTRA_HEADERS) {
+    try {
+      envExtraHeaders = JSON.parse(process.env.ABS_EXTRA_HEADERS);
+      console.log(`Extra headers loaded from env: ${Object.keys(envExtraHeaders).join(", ")}`);
+    } catch {
+      console.error("WARNING: ABS_EXTRA_HEADERS is not valid JSON — ignoring.");
+    }
+  }
+
   if (!ABS_URL || !ABS_TOKEN) {
     console.error("WARNING: Audiobookshelf URL and Token are not configured.");
+  }
+
+  // Parse client-supplied extra headers forwarded as X-ABS-Extra-Headers JSON
+  // Accepts both express.Request and raw IncomingMessage (used in proxy callbacks)
+  function parseClientExtraHeaders(req: { headers: IncomingMessage['headers'] }): Record<string, string> {
+    const raw = req.headers['x-abs-extra-headers'];
+    if (!raw || typeof raw !== 'string') return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
   }
 
   // Helper function for the few routes we need to intercept
@@ -28,17 +52,43 @@ async function startServer() {
     
     const targetUrl = typeof xAbsUrl === 'string' && xAbsUrl.endsWith('/') ? xAbsUrl.slice(0, -1) : xAbsUrl;
     
-    const headers: Record<string, string> = {};
+    // Merge: env-level extra headers baseline, then client-supplied overrides
+    const clientExtra = parseClientExtraHeaders(req);
+    const headers: Record<string, string> = {
+      ...envExtraHeaders,
+      ...clientExtra,
+    };
     if (clientAuth) {
       headers['Authorization'] = typeof clientAuth === 'string' ? clientAuth : '';
     } else if (ABS_TOKEN) {
       headers['Authorization'] = `Bearer ${ABS_TOKEN}`;
     }
 
-    return axios.create({
+    // Diagnostic logging of forwarded headers (safely masked)
+    const extraKeys = Object.keys(headers).filter(k => k.toLowerCase() !== 'authorization');
+    const maskedInfo = extraKeys.length > 0 
+      ? extraKeys.map(k => `${k}: (${headers[k] ? '••••' + String(headers[k]).slice(-4) : 'empty'})`).join(', ')
+      : 'none';
+    console.log(`[ABS API Client] Intercepting request to ${targetUrl}. Extra headers: [${maskedInfo}]`);
+
+    const apiInstance = axios.create({
       baseURL: targetUrl as string,
       headers
     });
+
+    apiInstance.interceptors.response.use((response) => {
+      const contentType = response.headers?.['content-type'];
+      const contentTypeStr = typeof contentType === 'string' ? contentType : '';
+      if (
+        contentTypeStr.includes('text/html') ||
+        (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE'))
+      ) {
+        throw new Error('Upstream returned HTML instead of JSON. This typically indicates a Cloudflare Access or authentication gateway challenge.');
+      }
+      return response;
+    });
+
+    return apiInstance;
   }
 
   // Format dynamic proxy error messages nicely
@@ -69,16 +119,33 @@ async function startServer() {
       const xAbsUrl = req.headers['x-abs-url'] || ABS_URL;
       const targetUrl = typeof xAbsUrl === 'string' && xAbsUrl.endsWith('/') ? xAbsUrl.slice(0, -1) : xAbsUrl;
       
+      // Include extra headers (env + client-supplied) so CF-protected servers accept the login request
+      const extraHeaders = {
+        ...envExtraHeaders,
+        ...parseClientExtraHeaders(req),
+      };
+
       const response = await axios.post(
         `${targetUrl}/login`,
         { username, password },
         {
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...extraHeaders,
           },
           timeout: 8000
         }
       );
+
+      const contentType = response.headers?.['content-type'];
+      const contentTypeStr = typeof contentType === 'string' ? contentType : '';
+      if (
+        contentTypeStr.includes('text/html') ||
+        (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE'))
+      ) {
+        throw new Error('Upstream returned HTML instead of JSON. This typically indicates a Cloudflare Access or authentication gateway challenge.');
+      }
+
       res.json(response.data);
     } catch (error: any) {
       console.error("Login proxy failed:", error.message);
@@ -119,7 +186,7 @@ async function startServer() {
     }
   });
 
-  // In-memory cache for sessions standard query, keyed by target URL
+  // In-memory cache for sessions standard query, keyed by target URL and auth signature
   let sessionsCache: Record<string, { data: any; timestamp: number }> = {};
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -130,15 +197,34 @@ async function startServer() {
       const shouldBypass = bypassCache === "true";
 
       const xAbsUrl = req.headers['x-abs-url'] || ABS_URL;
-      const cacheKey = typeof xAbsUrl === 'string' ? xAbsUrl : 'default';
+      const clientAuth = req.headers['authorization'] || '';
+      
+      // Build a robust cache key combining target host URL and authorization token signature to prevent cross-auth cache leakage
+      const hostPart = typeof xAbsUrl === 'string' ? xAbsUrl : 'default';
+      const authPart = typeof clientAuth === 'string' ? clientAuth.slice(-12) : ''; // Use last few chars as a safe non-sensitive signature
+      const cacheKey = `${hostPart}_${authPart}`;
+      
       const cached = sessionsCache[cacheKey];
 
       if (isStandardQuery && !shouldBypass && cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        console.log(`[Sessions Proxy] Returning cached sessions data for host signature ${hostPart} (${authPart ? 'auth: ok' : 'no auth'})`);
         return res.json(cached.data);
       }
 
+      console.log(`[Sessions Proxy] Fetching fresh sessions from: ${hostPart}/api/sessions`);
       const api = getAbsApi(req);
       const response = await api.get("api/sessions", { params: req.query });
+
+      // Diagnostic logging of response data structure
+      const isArray = Array.isArray(response.data);
+      const hasSessionsProp = response.data && typeof response.data === 'object' && 'sessions' in response.data;
+      const sessionsLength = isArray 
+        ? response.data.length 
+        : (hasSessionsProp && Array.isArray(response.data.sessions) ? response.data.sessions.length : 0);
+      
+      console.log(`[Sessions Proxy] RAW RESPONSE DATA TYPE: ${isArray ? 'Array' : typeof response.data}`);
+      console.log(`[Sessions Proxy] RAW RESPONSE KEYS: ${response.data && typeof response.data === 'object' ? Object.keys(response.data).join(', ') : 'none'}`);
+      console.log(`[Sessions Proxy] Successfully retrieved sessions (${sessionsLength} items)`);
 
       if (isStandardQuery) {
         sessionsCache[cacheKey] = {
@@ -149,7 +235,12 @@ async function startServer() {
 
       res.json(response.data);
     } catch (error: any) {
-      console.error("Failed to fetch sessions:", error.message);
+      console.error("[Sessions Proxy] Failed to fetch sessions:", error.message);
+      if (error.response) {
+        console.error(`[Sessions Proxy] Upstream status code: ${error.response.status}`);
+        console.error("[Sessions Proxy] Upstream response headers:", error.response.headers);
+        console.error("[Sessions Proxy] Upstream response data:", error.response.data);
+      }
       res.status(error.response?.status || 500).json({ error: formatError(error) });
     }
   });
@@ -192,6 +283,14 @@ async function startServer() {
     },
     on: {
       proxyReq: (proxyReq, req) => {
+        // Inject env-level extra headers first, then client-supplied ones
+        const clientExtra = parseClientExtraHeaders(req);
+        const merged = { ...envExtraHeaders, ...clientExtra };
+        for (const [key, value] of Object.entries(merged)) {
+          proxyReq.setHeader(key, value);
+        }
+        // Remove the forwarding envelope header — don't leak it to ABS
+        proxyReq.removeHeader('x-abs-extra-headers');
         // If client sends Authorization header, keep it. Otherwise, use ABS_TOKEN if configured.
         const clientAuth = req.headers['authorization'];
         if (!clientAuth && ABS_TOKEN) {
@@ -224,6 +323,13 @@ async function startServer() {
     },
     on: {
       proxyReq: (proxyReq, req) => {
+        // Inject extra headers for metadata/image requests too
+        const clientExtra = parseClientExtraHeaders(req);
+        const merged = { ...envExtraHeaders, ...clientExtra };
+        for (const [key, value] of Object.entries(merged)) {
+          proxyReq.setHeader(key, value);
+        }
+        proxyReq.removeHeader('x-abs-extra-headers');
         const clientAuth = req.headers['authorization'];
         if (clientAuth) {
           proxyReq.setHeader('Authorization', typeof clientAuth === 'string' ? clientAuth : '');

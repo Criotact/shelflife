@@ -521,11 +521,16 @@ export default function App() {
                 />
               )}
               {activeTab === 'settings' && (
-                <SettingsView onDisconnect={async () => {
-                  await api.disconnect();
-                  setIsConfigured(false);
-                  setActiveTab("dashboard");
-                }} />
+                <SettingsView 
+                  onDisconnect={async () => {
+                    await api.disconnect();
+                    setIsConfigured(false);
+                    setActiveTab("dashboard");
+                  }} 
+                  onHeadersSaved={async () => {
+                    await fetchData(true);
+                  }}
+                />
               )}
             </motion.div>
           </AnimatePresence>

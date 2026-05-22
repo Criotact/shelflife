@@ -9,7 +9,8 @@ import {
   AlertCircle, 
   ArrowRight,
   ShieldAlert,
-  Server
+  Server,
+  ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import axios from "axios";
@@ -32,6 +33,8 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
     type: "",
     message: "",
   });
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [extraHeadersInput, setExtraHeadersInput] = useState("");
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +58,21 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
     try {
       let resolvedToken = "";
 
+      // Parse and validate extra headers JSON (if provided)
+      let parsedExtraHeaders: Record<string, string> | undefined;
+      if (extraHeadersInput.trim()) {
+        try {
+          parsedExtraHeaders = JSON.parse(extraHeadersInput.trim());
+          if (typeof parsedExtraHeaders !== "object" || Array.isArray(parsedExtraHeaders)) {
+            throw new Error("Must be a JSON object");
+          }
+        } catch {
+          setStatus({ type: "error", message: 'Extra Headers must be valid JSON, e.g. {"CF-Access-Client-Id": "..."}' });
+          setLoading(false);
+          return;
+        }
+      }
+
       // If credentials auth, fetch token from /api/login
       if (authMethod === "credentials") {
         if (!username || !password) {
@@ -72,7 +90,11 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
           { 
             headers: { 
               "Content-Type": "application/json",
-              ...(isNative ? {} : { "X-ABS-URL": formattedUrl })
+              ...(isNative ? {} : { "X-ABS-URL": formattedUrl }),
+              // Forward extra headers so CF-protected servers accept login
+              ...(parsedExtraHeaders && !isNative
+                ? { "X-ABS-Extra-Headers": JSON.stringify(parsedExtraHeaders) }
+                : parsedExtraHeaders ?? {}),
             }, 
             timeout: 8000 
           }
@@ -92,7 +114,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
       }
 
       // Initialize API client temporarily to verify config
-      await api.saveConnection(formattedUrl, resolvedToken);
+      await api.saveConnection(formattedUrl, resolvedToken, parsedExtraHeaders);
       const health = await api.checkHealth();
 
       if (health.ok) {
@@ -284,6 +306,59 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Advanced / Extra Headers */}
+          <div className="border border-slate-200 rounded-2xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <ShieldAlert size={13} className="text-slate-400" />
+                Advanced
+              </span>
+              <ChevronDown
+                size={14}
+                className={`text-slate-400 transition-transform duration-200 ${
+                  showAdvanced ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            <AnimatePresence initial={false}>
+              {showAdvanced && (
+                <motion.div
+                  key="advanced-panel"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 pt-1 space-y-2 border-t border-slate-100">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                      Extra Auth Headers (JSON)
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder='{"CF-Access-Client-Id": "...", "CF-Access-Client-Secret": "..."}'
+                      value={extraHeadersInput}
+                      onChange={(e) => setExtraHeadersInput(e.target.value)}
+                      disabled={loading}
+                      spellCheck={false}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[11px] font-mono text-slate-800 placeholder:text-slate-400/70 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                    />
+                    <p className="text-[10px] text-slate-400/80 font-medium leading-relaxed">
+                      Optional. For servers behind{" "}
+                      <span className="text-slate-500 font-semibold">Cloudflare Access</span>,
+                      paste your Service Token here as JSON.
+                      Leave blank if not applicable.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Action Button & Status Info */}
           <div className="pt-2">
