@@ -169,10 +169,13 @@ export function DashboardView({
   }, [sessions]);
 
   const toggleUserExpanded = (userId: string) => {
-    setExpandedUsers(prev => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }));
+    setExpandedUsers(prev => {
+      const currentlyExpanded = prev[userId] !== false;
+      return {
+        ...prev,
+        [userId]: !currentlyExpanded
+      };
+    });
   };
 
   const last7DaysActivitiesGrouped = useMemo(() => {
@@ -256,14 +259,13 @@ export function DashboardView({
   }, [last7DaysActivitiesGrouped, recentActivitySearch]);
 
   const getSessionBookInfo = (session: Session) => {
-    const title = session.displayTitle || session.mediaItemTitle || "Unknown Book";
-    const matchedBook = recentBooks.find(b => b.metadata.title.toLowerCase() === title.toLowerCase());
+    const itemId = session.libraryItemId;
     const progressPercent = session.progress !== undefined 
       ? Math.round(session.progress * 100) 
       : (session.currentTime && session.duration 
         ? Math.round((session.currentTime / session.duration) * 100) 
         : null);
-    return { matchedBook, progressPercent };
+    return { itemId, progressPercent };
   };
 
   return (
@@ -407,7 +409,7 @@ export function DashboardView({
             ) : (
               <>
                 {filteredRecentActivityGrouped.map((user) => {
-                  const isCollapsed = !expandedUsers[user.userId];
+                  const isCollapsed = expandedUsers[user.userId] === false;
                   return (
                     <div key={user.userId} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30">
                       {/* User identity row */}
@@ -425,7 +427,7 @@ export function DashboardView({
                             {user.username.charAt(0)}
                           </div>
                           <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{user.username}</span>
-                          <span className="text-[8px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                          <span className="text-[9px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50 shrink-0">
                             {user.uniqueBooks.length} active {user.uniqueBooks.length === 1 ? 'book' : 'books'}
                           </span>
                         </div>
@@ -438,28 +440,28 @@ export function DashboardView({
                       {!isCollapsed && (
                         <div className="flex flex-col gap-1.5 px-1 pb-1">
                           {user.uniqueBooks.map(({ title, lastSession }) => {
-                            const { matchedBook, progressPercent } = getSessionBookInfo(lastSession);
+                            const { itemId, progressPercent } = getSessionBookInfo(lastSession);
                             return (
                               <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-100 transition-all group/book">
-                                {matchedBook?.id ? (
-                                  <div className="w-7 h-7 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform relative">
+                                <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform relative">
+                                  {itemId ? (
                                     <CoverImage 
-                                      itemId={matchedBook.id} 
+                                      itemId={itemId} 
                                       title={title} 
                                       className="w-full h-full object-cover animate-fade-in" 
                                     />
-                                  </div>
-                                ) : (
-                                  <div className="w-7 h-7 aspect-square rounded bg-slate-100 shrink-0 border border-slate-200/50 flex items-center justify-center text-slate-400 group-hover/book:scale-105 transition-transform">
-                                    <BookOpen size={12} />
-                                  </div>
-                                )}
+                                  ) : (
+                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                      <BookOpen size={14} />
+                                    </div>
+                                  )}
+                                </div>
                                 <div className="flex-grow min-w-0">
-                                  <p className="text-[10px] font-bold text-slate-800 truncate group-hover/book:text-indigo-600 transition-colors">{title}</p>
+                                  <p className="text-xs font-bold text-slate-800 truncate group-hover/book:text-indigo-600 transition-colors">{title}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     {progressPercent !== null && (
                                       <div className="flex items-center gap-1 shrink-0">
-                                        <span className="text-[8px] font-extrabold text-indigo-600 bg-indigo-50 px-0.5 rounded shrink-0">
+                                        <span className="text-[9px] font-extrabold text-indigo-600 bg-indigo-50 px-1 rounded shrink-0">
                                           {progressPercent}%
                                         </span>
                                         <div className="w-8 h-0.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
@@ -470,13 +472,13 @@ export function DashboardView({
                                         </div>
                                       </div>
                                     )}
-                                    <span className="text-[8px] text-slate-400 font-medium truncate">
+                                    <span className="text-xs text-slate-400 font-medium truncate">
                                       Session: {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
                                     </span>
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                                  <p className="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
                                 </div>
                               </div>
                             );

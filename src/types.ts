@@ -33,6 +33,7 @@ export interface Session {
   userId: string;
   username: string;
   libraryId: string;
+  libraryItemId?: string;
   duration: number;
   timeListening: number;
   startedAt: number;
