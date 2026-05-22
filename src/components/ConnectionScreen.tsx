@@ -153,6 +153,8 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
     }
   };
 
+  const isNative = Capacitor.isNativePlatform();
+
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 selection:bg-indigo-100 selection:text-indigo-900 font-sans">
       <motion.div 
@@ -175,6 +177,17 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
             Connect your Audiobookshelf Server
           </p>
         </div>
+
+        {/* Browser security warning — hidden on native/Android */}
+        {!isNative && (
+          <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <ShieldAlert size={15} className="shrink-0 text-amber-600 mt-0.5" />
+            <p className="text-[11px] leading-relaxed text-amber-800 font-medium">
+              <span className="font-bold">Testing only.</span>{" "}
+              Browser login stores credentials and headers in the browser, which is insecure. For production use, pass <code className="bg-amber-100 text-amber-900 px-1 rounded text-[10px] font-mono">ABS_URL</code> and <code className="bg-amber-100 text-amber-900 px-1 rounded text-[10px] font-mono">ABS_TOKEN</code> via your <code className="bg-amber-100 text-amber-900 px-1 rounded text-[10px] font-mono">.env</code> file instead.
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleConnect} className="space-y-5">
           {/* Server URL Input */}
