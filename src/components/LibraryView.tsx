@@ -253,8 +253,8 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                             />
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
-                            <p className="text-[9px] text-slate-500 font-medium">{book.metadata?.authorName}</p>
+                            <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
+                            <p className="text-xs text-slate-500 font-medium">{book.metadata?.authorName}</p>
                           </div>
                         </div>
                       </td>
@@ -337,8 +337,8 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                     </div>
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-900 line-clamp-1 group-hover:text-indigo-600 transition-colors" title={book.metadata?.title}>{book.metadata?.title}</p>
-                    <p className="text-[9px] text-slate-500 font-medium line-clamp-1" title={book.metadata?.authorName}>{book.metadata?.authorName}</p>
+                    <p className="text-xs font-bold text-slate-900 line-clamp-1 group-hover:text-indigo-600 transition-colors" title={book.metadata?.title}>{book.metadata?.title}</p>
+                    <p className="text-xs text-slate-500 font-medium line-clamp-1" title={book.metadata?.authorName}>{book.metadata?.authorName}</p>
                   </div>
                 </div>
               ))

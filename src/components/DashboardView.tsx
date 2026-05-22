@@ -34,8 +34,9 @@ export function DashboardView({
   recentBooks, totalBooks, sessions, userStats, libraries, activeSessions, sessionsLoading
 }: DashboardViewProps) {
   const isAndroid = Capacitor.getPlatform() === 'android';
-  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+  const [chartType, setChartType] = useState<'line' | 'bar'>('bar');
   const [timeframe, setTimeframe] = useState<'7' | '30' | '365' | 'all'>('30');
+  const [recentActivityWindow, setRecentActivityWindow] = useState<'1' | '7'>('7');
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
   const [selectedBookForDetails, setSelectedBookForDetails] = useState<Book | null>(null);
   const [initialModalTab, setInitialModalTab] = useState<'details' | 'match' | 'chapters'>('details');
@@ -179,7 +180,10 @@ export function DashboardView({
   };
 
   const last7DaysActivitiesGrouped = useMemo(() => {
-    const cutoff = subDays(new Date(), 7).getTime();
+    const days = parseInt(recentActivityWindow);
+    const cutoff = days === 1
+      ? (Date.now() - 24 * 60 * 60 * 1000)
+      : subDays(new Date(), 7).getTime();
     const recentSessions = sessions.filter(s => s.startedAt >= cutoff);
 
     // Build userId -> username lookup map from userStats
@@ -243,7 +247,7 @@ export function DashboardView({
     groupedList.sort((a, b) => b.mostRecentActiveTime - a.mostRecentActiveTime);
 
     return groupedList;
-  }, [sessions, userStats]);
+  }, [sessions, userStats, recentActivityWindow]);
 
   const filteredRecentActivityGrouped = useMemo(() => {
     if (!recentActivitySearch.trim()) return last7DaysActivitiesGrouped;
@@ -362,21 +366,40 @@ export function DashboardView({
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Recent Activity (7 Days)</h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Weekly user engagement & book summaries</p>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
+                Recent Activity ({recentActivityWindow === '1' ? '24 Hours' : '7 Days'})
+              </h3>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">User engagement &amp; book summaries</p>
             </div>
-            {last7DaysActivitiesGrouped.length > 5 && (
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all shrink-0">
-                <Search size={10} className="text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Filter recent..." 
-                  value={recentActivitySearch}
-                  onChange={(e) => setRecentActivitySearch(e.target.value)}
-                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
-                />
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                {([{ label: '24H', value: '1' }, { label: '7D', value: '7' }] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setRecentActivityWindow(opt.value)}
+                    className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${
+                      recentActivityWindow === opt.value
+                        ? 'bg-white text-indigo-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
-            )}
+              {last7DaysActivitiesGrouped.length > 5 && (
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all">
+                  <Search size={10} className="text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Filter recent..." 
+                    value={recentActivitySearch}
+                    onChange={(e) => setRecentActivitySearch(e.target.value)}
+                    className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
+                  />
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex-grow overflow-y-auto no-scrollbar flex flex-col gap-3 pr-1">
@@ -748,7 +771,7 @@ export function DashboardView({
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 group-hover:scale-105 transition-transform">
                           {initials}
                         </div>
-                        <span className="text-[11px] font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                        <span className="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
                           {author.name}
                         </span>
                       </div>
@@ -803,7 +826,7 @@ export function DashboardView({
                         <div className={cn("w-8 h-8 rounded-full bg-gradient-to-tr text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform", style.bg)}>
                           <Tags size={12} />
                         </div>
-                        <span className="text-[11px] font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                        <span className="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
                           {genre.name}
                         </span>
                       </div>

@@ -206,9 +206,11 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                       <p className={cn("text-[11px] font-bold uppercase tracking-tight", isActive ? "text-white" : "text-slate-900")}>
                         {user.username}
                       </p>
-                      <p className={cn("text-[9px] font-medium", isActive ? "text-white/60" : "text-slate-400")}>
-                        {user.type === 'admin' ? 'System Admin' : 'Listener'}
-                      </p>
+                      {user.type === 'admin' && (
+                        <p className={cn("text-[9px] font-medium", isActive ? "text-white/60" : "text-slate-400")}>
+                          System Admin
+                        </p>
+                      )}
                     </div>
                   </div>
                   {!isActive && stats && (
@@ -482,7 +484,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{title}</p>
+                                    <p className="text-xs font-bold text-slate-900 line-clamp-1">{title}</p>
                                     <div className="flex items-center gap-2 mt-1">
                                       {progressPercent !== null && (
                                         <div className="flex items-center gap-1.5">
@@ -539,7 +541,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                   )}
                                 </div>
                                 <div>
-                                  <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{session.displayTitle || session.mediaItemTitle}</p>
+                                  <p className="text-xs font-bold text-slate-900 line-clamp-1">{session.displayTitle || session.mediaItemTitle}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     {progressPercent !== null && (
                                       <div className="flex items-center gap-1.5">
@@ -590,7 +592,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-[11px] font-bold text-slate-900 line-clamp-1">{title}</p>
+                                    <p className="text-xs font-bold text-slate-900 line-clamp-1">{title}</p>
                                     <div className="flex items-center gap-2 mt-1">
                                       {progressPercent !== null && (
                                         <div className="flex items-center gap-1.5">
