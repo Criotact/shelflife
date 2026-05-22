@@ -9,7 +9,7 @@ import {
 import { format, formatDistanceToNow, subDays } from "date-fns";
 import { User, Session, UserStats, Book } from "../types";
 import { ActivityHeatmap } from "./ActivityHeatmap";
-import { formatDuration, cn } from "../lib/utils";
+import { formatDuration, cn, formatTotalTime } from "../lib/utils";
 import { CoverImage } from "./CoverImage";
 
 interface UsersViewProps {
@@ -215,7 +215,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                   </div>
                   {!isActive && stats && (
                     <div className="text-right">
-                      <p className="text-[9px] font-bold text-slate-900">{formatDuration(stats.totalTime)}</p>
+                      <p className="text-[9px] font-bold text-slate-900">{formatTotalTime(stats.totalTime)}</p>
                       <p className="text-[8px] text-slate-400 uppercase font-bold">Logged</p>
                     </div>
                   )}
@@ -256,7 +256,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                   <div className="flex flex-wrap gap-4">
                     <div className="flex items-center gap-1.5 text-slate-500">
                       <Clock size={12} />
-                      <span className="text-[10px] font-bold">{formatDuration(selectedUserStats?.totalTime || 0)} Total Time</span>
+                      <span className="text-[10px] font-bold">{formatTotalTime(selectedUserStats?.totalTime || 0)} Total Time</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-slate-500">
                       <TrendingUp size={12} />

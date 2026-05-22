@@ -1,5 +1,5 @@
 import { UserStats } from "../types";
-import { formatDuration, cn } from "../lib/utils";
+import { formatDuration, cn, formatTotalTime } from "../lib/utils";
 import { User as UserIcon, Clock, ChevronRight } from "lucide-react";
 
 interface UserStatsListProps {
@@ -36,7 +36,7 @@ export function UserStatsList({ stats }: UserStatsListProps) {
                         <span className="font-bold text-slate-900">{user.username}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2 font-bold text-slate-700">{formatDuration(user.totalTime)}</td>
+                    <td className="px-4 py-2 font-bold text-slate-700">{formatTotalTime(user.totalTime)}</td>
                     <td className="px-4 py-2 text-slate-400 font-medium">{formatDuration(user.avgDaily)}</td>
                     <td className="px-4 py-2 text-right">
                       <div className="flex items-center justify-end gap-1.5">

@@ -14,7 +14,7 @@ import {
 
 import { UserStatsList } from "./UserStatsList";
 import { RecentItems } from "./RecentItems";
-import { formatDuration, cn } from "../lib/utils";
+import { formatDuration, cn, formatTotalTime } from "../lib/utils";
 import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
 import { CoverImage } from "./CoverImage";
@@ -455,7 +455,7 @@ export function DashboardView({
                           </span>
                         </div>
                         <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/50">
-                          {formatDuration(user.totalTime)}
+                          {formatTotalTime(user.totalTime)}
                         </span>
                       </div>
 
@@ -776,7 +776,7 @@ export function DashboardView({
                         </span>
                       </div>
                       <span className="text-[10px] font-bold text-indigo-600 shrink-0">
-                        {formatDuration(author.time)}
+                        {formatTotalTime(author.time)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -831,7 +831,7 @@ export function DashboardView({
                         </span>
                       </div>
                       <span className={cn("text-[10px] font-bold shrink-0", style.text)}>
-                        {formatDuration(genre.time)}
+                        {formatTotalTime(genre.time)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">

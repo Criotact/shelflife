@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { 
   Library as LibraryIcon, Database, RefreshCw, Layers, BookOpen, 
   Search, Filter, MoreVertical, CheckCircle2, AlertCircle, Sparkles,
-  ChevronRight, Calendar, User as UserIcon, Tag
+  ChevronRight, Calendar, User as UserIcon, Tag, ArrowUp, ArrowDown, Clock
 } from "lucide-react";
 import { Book, Library } from "../types";
 import { formatDistanceToNow } from "date-fns";
@@ -17,6 +17,26 @@ interface LibraryViewProps {
   libraries: Library[];
 }
 
+function formatBytes(bytes: number | undefined): string {
+  if (bytes === undefined || bytes === null || bytes === 0) return "-- GB";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+
+function formatDuration(seconds: number | undefined): string {
+  if (seconds === undefined || seconds === null || seconds === 0) return "-- h";
+  const days = Math.floor(seconds / (24 * 3600));
+  seconds %= (24 * 3600);
+  const hours = Math.floor(seconds / 3600);
+  
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0 || days === 0) parts.push(`${hours}h`);
+  return parts.join(" ");
+}
+
 export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps) {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,6 +48,18 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(15);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [sortBy, setSortBy] = useState<'title' | 'author' | 'addedAt'>('addedAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [libraryStats, setLibraryStats] = useState<{ totalSize: number; totalDuration: number } | null>(null);
+
+  const handleHeaderClick = (field: 'title' | 'author' | 'addedAt') => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder(field === 'addedAt' ? 'desc' : 'asc');
+    }
+  };
 
   useEffect(() => {
     if (libraries.length > 0) {
@@ -40,7 +72,13 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
     if (!libId) return;
     setLoading(true);
     try {
-      const res = await api.getLibraryItems(libId, { limit: 1000 });
+      const [res, stats] = await Promise.all([
+        api.getLibraryItems(libId, { limit: 1000 }),
+        api.getLibraryStats(libId).catch(err => {
+          console.error("Failed to fetch library stats:", err);
+          return null;
+        })
+      ]);
       const items = res.results || res || [];
       const transformed: Book[] = items.map((item: any) => {
         const mediaMeta = item.media?.metadata || item.metadata || { title: "Unknown Title", authorName: "Unknown Author" };
@@ -56,9 +94,11 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
         };
       });
       setBooks(transformed);
+      setLibraryStats(stats);
     } catch (err) {
       console.error("Failed to fetch library books:", err);
       setBooks(initialBooks);
+      setLibraryStats(null);
     } finally {
       setLoading(false);
     }
@@ -103,8 +143,22 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                author.toLowerCase().includes(query) || 
                id.toLowerCase().includes(query);
       })
-      .sort((a, b) => b.addedAt - a.addedAt);
-  }, [books, searchTerm]);
+      .sort((a, b) => {
+        let comparison = 0;
+        if (sortBy === 'title') {
+          const titleA = a.metadata?.title || "";
+          const titleB = b.metadata?.title || "";
+          comparison = titleA.localeCompare(titleB, undefined, { sensitivity: 'base', numeric: true });
+        } else if (sortBy === 'author') {
+          const authorA = a.metadata?.authorName || "";
+          const authorB = b.metadata?.authorName || "";
+          comparison = authorA.localeCompare(authorB, undefined, { sensitivity: 'base', numeric: true });
+        } else if (sortBy === 'addedAt') {
+          comparison = a.addedAt - b.addedAt;
+        }
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
+  }, [books, searchTerm, sortBy, sortOrder]);
 
   const paginatedBooks = useMemo(() => {
     return filteredBooks.slice(0, visibleCount);
@@ -155,11 +209,12 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
       </div>
 
       {/* Library Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Storage Volumes", value: libraries.length, icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600", bg: "bg-rose-50" },
         ].map((stat) => (
           <div key={stat.label} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", stat.bg, stat.color)}>
@@ -176,7 +231,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
       {/* Repository Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/30">
-          <div className="flex items-center gap-3 flex-grow max-w-lg">
+          <div className="flex items-center gap-3 flex-grow max-w-2xl">
             <div className="relative flex-grow">
               <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -189,6 +244,28 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                 placeholder="Search volume by title, author, or ID..." 
                 className="w-full bg-white border border-slate-200 rounded-xl py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-2 focus:ring-indigo-100 text-slate-900 placeholder:text-slate-400 outline-none transition-all"
               />
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as any);
+                  setVisibleCount(15);
+                }}
+                className="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none transition-all cursor-pointer hover:border-slate-300"
+              >
+                <option value="addedAt">Added On</option>
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 bg-white flex items-center justify-center active:scale-95"
+                title={`Sort ${sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
+              >
+                {sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -213,9 +290,32 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
-                  <th className="px-5 py-3">Title / Author</th>
-                  <th className="px-5 py-3">Index Time</th>
-                  <th className="px-5 py-3 text-right">Actions</th>
+                  <th 
+                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 transition-colors"
+                    onClick={() => handleHeaderClick('title')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Title / Author</span>
+                      {sortBy === 'title' && (
+                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600" /> : <ArrowDown size={10} className="text-indigo-600" />
+                      )}
+                      {sortBy === 'author' && (
+                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600" /> : <ArrowDown size={10} className="text-indigo-600" />
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 transition-colors"
+                    onClick={() => handleHeaderClick('addedAt')}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Added On</span>
+                      {sortBy === 'addedAt' && (
+                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600" /> : <ArrowDown size={10} className="text-indigo-600" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-5 py-3 text-right select-none">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -260,7 +360,6 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                       </td>
                       <td className="px-5 py-3">
                         <p className="text-[11px] font-bold text-slate-700">{formatDistanceToNow(book.addedAt)} ago</p>
-                        <p className="text-[8px] text-slate-400 uppercase font-bold tracking-widest uppercase">System Index</p>
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">

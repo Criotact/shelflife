@@ -177,6 +177,13 @@ class ApiClient {
     return response.data;
   }
 
+  // Get library stats (total size, duration, etc.)
+  public async getLibraryStats(libraryId: string) {
+    if (!this.client) throw new Error("Client not initialized");
+    const response = await this.client.get(`/libraries/${libraryId}/stats`);
+    return response.data;
+  }
+
   // Library-specific controls
   public async scanLibrary(libraryId: string) {
     if (!this.client) throw new Error("Client not initialized");
