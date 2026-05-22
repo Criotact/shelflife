@@ -1,4 +1,4 @@
-import { Power, Radio, ShieldCheck } from "lucide-react";
+import { Power, ShieldCheck } from "lucide-react";
 import { api } from "../lib/api";
 
 interface SettingsViewProps {
@@ -26,12 +26,6 @@ export function SettingsView({ onDisconnect }: SettingsViewProps) {
           <div>
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
               <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Node Connection</h4>
-              <div className={`px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase flex items-center gap-1.5 ${
-                isDirect ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
-              }`}>
-                <Radio size={10} className="animate-pulse" />
-                {isDirect ? 'Direct' : 'Proxy'}
-              </div>
             </div>
             
             <div className="space-y-4 mb-6">
