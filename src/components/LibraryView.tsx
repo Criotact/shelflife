@@ -440,6 +440,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                     tickFormatter={(v) => `${Math.round(v)}h`}
                   />
                   <Tooltip 
+                    cursor={{ stroke: isDark ? '#334155' : '#cbd5e1', strokeWidth: 1 }}
                     content={<CustomChartTooltip isDark={isDark} />}
                   />
                   <Area 
@@ -459,8 +460,8 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
 
       {/* Repository Table */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-slate-800/20">
-          <div className="flex items-center gap-3 flex-grow max-w-2xl">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/30 dark:bg-slate-800/20 gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-grow max-w-2xl w-full sm:w-auto">
             <div className="relative flex-grow">
               <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input 
@@ -474,30 +475,51 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all"
               />
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value as any);
-                  setVisibleCount(15);
-                }}
-                className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 outline-none transition-all cursor-pointer hover:border-slate-300 dark:hover:border-slate-700"
-              >
-                <option value="addedAt">Added On</option>
-                <option value="title">Title</option>
-                <option value="author">Author</option>
-              </select>
-              <button
-                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-805 transition-colors text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-950 flex items-center justify-center active:scale-95 cursor-pointer"
-                title={`Sort ${sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
-              >
-                {sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-              </button>
+            <div className="flex items-center justify-between sm:justify-start gap-3 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value as any);
+                    setVisibleCount(15);
+                  }}
+                  className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 outline-none transition-all cursor-pointer hover:border-slate-300 dark:hover:border-slate-700"
+                >
+                  <option value="addedAt">Added On</option>
+                  <option value="title">Title</option>
+                  <option value="author">Author</option>
+                </select>
+                <button
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-805 transition-colors text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-950 flex items-center justify-center active:scale-95 cursor-pointer"
+                  title={`Sort ${sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
+                >
+                  {sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+                </button>
+              </div>
+              
+              {/* Mobile Display Controls: visible on mobile screens only, hidden on sm and above */}
+              <div className="flex items-center gap-1 sm:hidden">
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mr-1">Display:</span>
+                <button 
+                  onClick={() => setViewMode('table')}
+                  className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer", viewMode === 'table' ? "bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500")}
+                >
+                  TABLE
+                </button>
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer", viewMode === 'grid' ? "bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500")}
+                >
+                  GRID
+                </button>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          
+          {/* Desktop Display Controls: hidden on mobile, visible on sm and above */}
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
             <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mr-2">Display:</span>
             <button 
               onClick={() => setViewMode('table')}
@@ -513,6 +535,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
             </button>
           </div>
         </div>
+
 
         {viewMode === 'table' ? (
           <div className="overflow-x-auto">

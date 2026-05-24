@@ -294,7 +294,7 @@ export function DashboardView({
               <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">Direct stream activity</p>
             </div>
             {activeSessions.length > 5 && (
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 dark:focus-within:ring-indigo-950/50 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 transition-all shrink-0">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 dark:focus-within:ring-indigo-950/50 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 transition-all shrink-0">
                 <Search size={10} className="text-slate-400" />
                 <input 
                   type="text" 
@@ -389,7 +389,7 @@ export function DashboardView({
                 ))}
               </div>
               {last7DaysActivitiesGrouped.length > 5 && (
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 dark:focus-within:ring-indigo-950/50 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 transition-all">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 dark:focus-within:ring-indigo-950/50 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 transition-all">
                   <Search size={10} className="text-slate-400" />
                   <input 
                     type="text" 
@@ -466,7 +466,7 @@ export function DashboardView({
                           {user.uniqueBooks.map(({ title, lastSession }) => {
                             const { itemId, progressPercent } = getSessionBookInfo(lastSession);
                             return (
-                              <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-100 dark:border-slate-800 transition-all group/book">
+                              <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all group/book">
                                 <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 dark:border-slate-800 group-hover/book:scale-105 transition-transform relative">
                                   {itemId ? (
                                     <CoverImage 
@@ -613,6 +613,7 @@ export function DashboardView({
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} dy={5} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                     <Tooltip 
+                      cursor={{ stroke: isDark ? '#334155' : '#e2e8f0', strokeWidth: 1 }}
                       contentStyle={{ 
                         backgroundColor: isDark ? '#1e293b' : '#fff', 
                         borderRadius: '8px', 
@@ -641,6 +642,7 @@ export function DashboardView({
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} dy={5} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                     <Tooltip 
+                      cursor={{ fill: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(241, 245, 249, 0.6)' }}
                       contentStyle={{ 
                         backgroundColor: isDark ? '#1e293b' : '#fff', 
                         borderRadius: '8px', 
@@ -702,6 +704,7 @@ export function DashboardView({
                   <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} dy={5} interval={3} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                   <Tooltip 
+                    cursor={{ fill: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(241, 245, 249, 0.6)' }}
                     contentStyle={{ 
                       backgroundColor: isDark ? '#1e293b' : '#fff', 
                       borderRadius: '8px', 
@@ -778,7 +781,7 @@ export function DashboardView({
                   .toUpperCase() || "??";
                 
                 return (
-                  <div key={author.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:border-slate-100 dark:hover:border-slate-800 transition-all group select-none">
+                  <div key={author.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:border-slate-100 dark:hover:border-slate-800 transition-all group select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 group-hover:scale-105 transition-transform">
@@ -833,7 +836,7 @@ export function DashboardView({
                 const style = getGenreStyle(genre.name);
                 
                 return (
-                  <div key={genre.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:border-slate-100 dark:hover:border-slate-800 transition-all group select-none">
+                  <div key={genre.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:border-slate-100 dark:hover:border-slate-800 transition-all group select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className={cn("w-8 h-8 rounded-full bg-gradient-to-tr text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform", style.bg)}>

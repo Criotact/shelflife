@@ -99,7 +99,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-955/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
       {/* Modal Card wrapper */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -110,7 +110,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
       >
         {/* Subtle background color accents */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-bl-full -z-10" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-slate-50 dark:bg-slate-955/20 rounded-tr-full -z-10" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-slate-50 dark:bg-slate-950/20 rounded-tr-full -z-10" />
 
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/20 dark:bg-slate-900/10">
@@ -161,7 +161,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                   placeholder="Title"
                   value={searchTitle}
                   onChange={(e) => setSearchTitle(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 rounded-xl px-3.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-550 outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all"
                   required
                 />
               </div>
@@ -173,7 +173,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                   placeholder="Author (Optional)"
                   value={searchAuthor}
                   onChange={(e) => setSearchAuthor(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 rounded-xl px-3.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-404 dark:placeholder:text-slate-555 outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all"
                 />
               </div>
 
@@ -200,7 +200,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
-                  className="bg-rose-50 dark:bg-rose-955/20 border border-rose-100 dark:border-rose-900/30 text-rose-800 dark:text-rose-455 p-4 rounded-2xl flex items-start gap-2.5 text-xs font-semibold mb-4"
+                  className="bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-rose-800 dark:text-rose-400 p-4 rounded-2xl flex items-start gap-2.5 text-xs font-semibold mb-4"
                 >
                   <AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
                   <div>{error}</div>
@@ -231,10 +231,10 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.03 }}
                       onClick={() => setSelectedCandidate(candidate)}
-                      className="group border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex gap-4 bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850/30 hover:border-slate-350 dark:hover:border-slate-700 transition-all cursor-pointer items-start"
+                      className="group border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex gap-4 bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer items-start"
                     >
                       {/* Candidate Cover */}
-                      <div className="w-12 h-18 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-slate-300 dark:text-slate-700 group-hover:shadow-sm transition-shadow">
+                      <div className="w-12 h-18 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-slate-300 dark:text-slate-700 group-hover:shadow-sm transition-shadow">
                         {candidate.coverUrl ? (
                           <img
                             src={candidate.coverUrl}
@@ -256,7 +256,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                           <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight truncate">
                             {candidate.title}
                           </p>
-                          <span className="bg-indigo-50 dark:bg-indigo-950/55 text-indigo-755 dark:text-indigo-400 text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0">
+                          <span className="bg-indigo-50 dark:bg-indigo-950/55 text-indigo-700 dark:text-indigo-400 text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0">
                             {candidate.provider}
                           </span>
                         </div>
@@ -314,7 +314,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-850 p-4 rounded-2xl relative overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 p-4 rounded-2xl relative overflow-hidden">
                     {confirming && (
                       <div className="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-[1px] flex flex-col items-center justify-center z-10 animate-fade-in">
                         {matchSuccess ? (
@@ -340,7 +340,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                     <div className="space-y-2.5">
                       <p className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">Proposed Metadata</p>
                       <div className="flex gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-indigo-100 dark:border-indigo-950/60 shadow-sm">
-                        <div className="w-12 h-18 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 rounded-lg overflow-hidden shrink-0 flex items-center justify-center text-slate-300 dark:text-slate-705">
+                        <div className="w-12 h-18 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center text-slate-300 dark:text-slate-700">
                           {selectedCandidate.coverUrl ? (
                             <img
                               src={selectedCandidate.coverUrl}
@@ -354,7 +354,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold text-slate-900 dark:text-slate-100 leading-snug truncate">{selectedCandidate.title}</p>
-                          <p className="text-[9px] text-slate-500 dark:text-slate-405 font-bold mt-0.5 leading-snug truncate">By {selectedCandidate.author}</p>
+                          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 leading-snug truncate">By {selectedCandidate.author}</p>
                           
                           <div className="mt-2 text-[8px] text-slate-400 dark:text-slate-500 font-semibold space-y-0.5">
                             {selectedCandidate.publisher && <p className="truncate">Pub: {selectedCandidate.publisher}</p>}
@@ -369,7 +369,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                     {selectedCandidate.description && (
                       <div className="space-y-2.5">
                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Description Preview</p>
-                        <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-850 text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-h-[110px] overflow-y-auto shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-h-[110px] overflow-y-auto shadow-sm">
                           {selectedCandidate.description}
                         </div>
                       </div>
@@ -381,7 +381,7 @@ export function MatchModal({ book, onClose, onMatchSuccess, isDark = false }: Ma
                       type="button"
                       onClick={() => setSelectedCandidate(null)}
                       disabled={confirming}
-                      className="px-4 py-2 border border-slate-202 dark:border-slate-800 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-[10px] font-bold transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-[10px] font-bold transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       CANCEL
                     </button>

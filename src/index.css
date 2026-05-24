@@ -44,3 +44,14 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.6);
 }
+
+/* Remove Android/mobile tap highlight and focus outlines on charts */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-surface * {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+

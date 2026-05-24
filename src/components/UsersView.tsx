@@ -300,6 +300,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading, 
                         <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                         <Tooltip 
+                          cursor={{ fill: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(241, 245, 249, 0.6)' }}
                           contentStyle={{ 
                             backgroundColor: isDark ? '#1e293b' : '#fff', 
                             borderRadius: '8px', 
@@ -346,6 +347,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading, 
                         <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} interval={3} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                         <Tooltip 
+                          cursor={{ fill: isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(241, 245, 249, 0.6)' }}
                           contentStyle={{ 
                             backgroundColor: isDark ? '#1e293b' : '#fff', 
                             borderRadius: '8px', 
