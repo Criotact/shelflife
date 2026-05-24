@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { 
   Library as LibraryIcon, Database, RefreshCw, Layers, BookOpen, 
   Search, Filter, MoreVertical, CheckCircle2, AlertCircle, Sparkles,
@@ -66,6 +66,14 @@ const CustomChartTooltip = ({ active, payload }: any) => {
 };
 
 export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps) {
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedLibraryId, setSelectedLibraryId] = useState<string>("");
@@ -174,12 +182,50 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
     setIsRescanning(true);
     try {
       await api.scanLibrary(libId);
-      setTimeout(async () => {
-        await fetchLibraryBooks();
-        setIsRescanning(false);
-      }, 2000);
+      
+      const startTime = Date.now();
+      const pollInterval = 3000; // poll every 3 seconds
+      const maxDuration = 60000; // max 60 seconds (1 minute timeout)
+      
+      const pollScanStatus = async () => {
+        if (!isMounted.current) return;
+        
+        try {
+          // 1. Fetch current books and stats to update the UI in real-time
+          await fetchLibraryBooks();
+          
+          // 2. Fetch tasks to check if the scan is still active on the server
+          const tasksData = await api.getTasks().catch(() => null);
+          const tasks = Array.isArray(tasksData)
+            ? tasksData
+            : (tasksData?.tasks || tasksData?.results || []);
+          
+          const isScanActive = tasks.some((t: any) => 
+            (t.type === 'scan' || t.action === 'library-scan' || t.name === 'Library Scan') &&
+            (t.status === 'running' || t.status === 'pending')
+          );
+          
+          const elapsed = Date.now() - startTime;
+          if (isScanActive && elapsed < maxDuration) {
+            setTimeout(pollScanStatus, pollInterval);
+          } else {
+            // Scan finished or timed out - do one final sync and stop spinner
+            await fetchLibraryBooks();
+            setIsRescanning(false);
+          }
+        } catch (err) {
+          console.error("Error during scan polling:", err);
+          // Fallback: do a final fetch and stop spinning
+          await fetchLibraryBooks();
+          setIsRescanning(false);
+        }
+      };
+      
+      // Start polling
+      setTimeout(pollScanStatus, pollInterval);
+      
     } catch (err) {
-      console.error("Rescan failed:", err);
+      console.error("Rescan failed to start:", err);
       setIsRescanning(false);
     }
   };

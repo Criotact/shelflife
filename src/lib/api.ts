@@ -259,6 +259,13 @@ class ApiClient {
     return response.data;
   }
 
+  // Get running/active tasks
+  public async getTasks() {
+    if (!this.client) throw new Error("Client not initialized");
+    const response = await this.client.get("/tasks");
+    return response.data;
+  }
+
   public async matchLibraryItem(itemId: string, matchData?: MatchCandidate) {
     if (!this.client) throw new Error("Client not initialized");
     const payload = matchData ? {
