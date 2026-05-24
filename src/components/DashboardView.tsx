@@ -28,10 +28,11 @@ interface DashboardViewProps {
   libraries: Library[];
   activeSessions: Session[];
   sessionsLoading: boolean;
+  isDark?: boolean;
 }
 
 export function DashboardView({ 
-  recentBooks, totalBooks, sessions, userStats, libraries, activeSessions, sessionsLoading
+  recentBooks, totalBooks, sessions, userStats, libraries, activeSessions, sessionsLoading, isDark = false
 }: DashboardViewProps) {
   const isAndroid = Capacitor.getPlatform() === 'android';
   const [chartType, setChartType] = useState<'line' | 'bar'>('bar');
@@ -280,27 +281,27 @@ export function DashboardView({
       {/* Live Playback and Recent Activity Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className={cn(
-          "bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col transition-all duration-300",
+          "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col transition-all duration-300",
           filteredActiveSessions.length <= 1 
             ? "h-auto min-h-[180px] lg:h-[400px]" 
             : "h-[400px]"
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
-                Live Playback <span className="font-extrabold text-indigo-600">({activeSessions.length})</span>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+                Live Playback <span className="font-extrabold text-indigo-600 dark:text-indigo-400">({activeSessions.length})</span>
               </h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Direct stream activity</p>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">Direct stream activity</p>
             </div>
             {activeSessions.length > 5 && (
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all shrink-0">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 dark:focus-within:ring-indigo-950/50 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 transition-all shrink-0">
                 <Search size={10} className="text-slate-400" />
                 <input 
                   type="text" 
                   placeholder="Filter streams..." 
                   value={livePlaybackSearch}
                   onChange={(e) => setLivePlaybackSearch(e.target.value)}
-                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
+                  className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-full outline-none text-slate-900 dark:text-slate-100 p-0"
                 />
               </div>
             )}
@@ -308,46 +309,46 @@ export function DashboardView({
           
           <div className="flex-grow overflow-y-auto no-scrollbar flex flex-col gap-3 pr-1">
             {filteredActiveSessions.map((session) => (
-              <div key={session.id} className="p-3 rounded-xl border border-indigo-100 bg-indigo-50/40 flex flex-col gap-2 relative overflow-hidden group shrink-0">
+              <div key={session.id} className="p-3 rounded-xl border border-indigo-100 dark:border-indigo-950/40 bg-indigo-50/40 dark:bg-indigo-950/20 flex flex-col gap-2 relative overflow-hidden group shrink-0">
                 <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-125 transition-transform">
-                  <Activity size={32} className="text-indigo-600" />
+                  <Activity size={32} className="text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 overflow-hidden">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 overflow-hidden">
                     <UserIcon size={14} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{session.username}</p>
-                    <p className="text-[9px] text-indigo-600 font-semibold uppercase">Now Listening</p>
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">{session.username}</p>
+                    <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">Now Listening</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-800 truncate">{session.displayTitle || session.mediaItemTitle}</p>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{session.displayTitle || session.mediaItemTitle}</p>
                   <div className="flex items-center justify-between mt-0.5">
-                    <p className="text-[9px] font-medium text-slate-500">Live for {formatDuration(Date.now() / 1000 - session.startedAt / 1000)}</p>
+                    <p className="text-[9px] font-medium text-slate-500 dark:text-slate-400">Live for {formatDuration(Date.now() / 1000 - session.startedAt / 1000)}</p>
                     {session.progress !== undefined && (
-                      <p className="text-[9px] font-bold text-indigo-600">{Math.round(session.progress * 100)}%</p>
+                      <p className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400">{Math.round(session.progress * 100)}%</p>
                     )}
                   </div>
                 </div>
-                <div className="w-full bg-indigo-100 rounded-full h-0.5 mt-1">
+                <div className="w-full bg-indigo-100 dark:bg-indigo-950 rounded-full h-0.5 mt-1">
                   <div 
-                    className="bg-indigo-600 h-0.5 rounded-full animate-pulse transition-all duration-1000" 
+                    className="bg-indigo-600 dark:bg-indigo-500 h-0.5 rounded-full animate-pulse transition-all duration-1000" 
                     style={{ width: `${(session.progress || 0) * 100}%` }}
                   ></div>
                 </div>
               </div>
             ))}
             {filteredActiveSessions.length === 0 && (
-              <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-12 flex-grow">
-                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+              <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 py-12 flex-grow">
+                <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center opacity-60">
                   <Play size={18} className="text-slate-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                     {activeSessions.length === 0 ? "Silence reigns" : "No results"}
                   </p>
-                  <p className="text-[8px] font-medium text-slate-400">
+                  <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500">
                     {activeSessions.length === 0 
                       ? "No active sessions at the moment." 
                       : "No active sessions matching your query."}
@@ -359,28 +360,28 @@ export function DashboardView({
         </div>
 
         <div className={cn(
-          "bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col transition-all duration-300",
+          "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col transition-all duration-300",
           (sessionsLoading || filteredRecentActivityGrouped.length > 1)
             ? "h-[400px]" 
             : "h-auto min-h-[180px] lg:h-[400px]"
         )}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-2 shrink-0 gap-2">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
                 Recent Activity ({recentActivityWindow === '1' ? '24 Hours' : '7 Days'})
               </h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">User engagement &amp; book summaries</p>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">User engagement &amp; book summaries</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <div className="flex bg-slate-100 p-0.5 rounded-lg">
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
                 {([{ label: '24H', value: '1' }, { label: '7D', value: '7' }] as const).map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setRecentActivityWindow(opt.value)}
-                    className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${
+                    className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer ${
                       recentActivityWindow === opt.value
-                        ? 'bg-white text-indigo-600 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     {opt.label}
@@ -388,14 +389,14 @@ export function DashboardView({
                 ))}
               </div>
               {last7DaysActivitiesGrouped.length > 5 && (
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 focus-within:border-indigo-400 transition-all">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl w-full sm:w-44 focus-within:ring-2 focus-within:ring-indigo-100/50 dark:focus-within:ring-indigo-950/50 focus-within:border-indigo-400 dark:focus-within:border-indigo-500 transition-all">
                   <Search size={10} className="text-slate-400" />
                   <input 
                     type="text" 
                     placeholder="Filter recent..." 
                     value={recentActivitySearch}
                     onChange={(e) => setRecentActivitySearch(e.target.value)}
-                    className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-900 p-0"
+                    className="bg-transparent border-none text-[9px] font-semibold focus:ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-full outline-none text-slate-900 dark:text-slate-100 p-0"
                   />
                 </div>
               )}
@@ -405,25 +406,25 @@ export function DashboardView({
           <div className="flex-grow overflow-y-auto no-scrollbar flex flex-col gap-3 pr-1">
             {sessionsLoading ? (
               Array.from({ length: 3 }).map((_, idx) => (
-                <div key={idx} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30 animate-pulse select-none">
+                <div key={idx} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/10 animate-pulse select-none">
                   {/* Pulsing User identity row */}
-                  <div className="flex items-center justify-between px-2 py-1 bg-white rounded-xl border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between px-2 py-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-slate-200 shrink-0" />
-                      <div className="w-16 h-3 bg-slate-200 rounded shrink-0" />
+                      <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                      <div className="w-16 h-3 bg-slate-200 dark:bg-slate-800 rounded shrink-0" />
                     </div>
-                    <div className="w-12 h-4 bg-slate-100 rounded-full" />
+                    <div className="w-12 h-4 bg-slate-100 dark:bg-slate-800 rounded-full" />
                   </div>
                   {/* Pulsing sub-book items */}
                   <div className="flex flex-col gap-1.5 px-1 pb-1">
                     {Array.from({ length: 2 }).map((_, bIdx) => (
-                      <div key={bIdx} className="flex items-center gap-3 p-1.5 rounded-xl bg-white border border-slate-100">
-                        <div className="w-7 h-7 bg-slate-200 rounded shrink-0" />
+                      <div key={bIdx} className="flex items-center gap-3 p-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                        <div className="w-7 h-7 bg-slate-200 dark:bg-slate-800 rounded shrink-0" />
                         <div className="flex-grow">
-                          <div className="w-24 h-3 bg-slate-200 rounded mb-1" />
-                          <div className="w-16 h-2.5 bg-slate-100 rounded" />
+                          <div className="w-24 h-3 bg-slate-200 dark:bg-slate-800 rounded mb-1" />
+                          <div className="w-16 h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded" />
                         </div>
-                        <div className="w-10 h-2.5 bg-slate-100 rounded shrink-0" />
+                        <div className="w-10 h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -434,11 +435,11 @@ export function DashboardView({
                 {filteredRecentActivityGrouped.map((user) => {
                   const isCollapsed = expandedUsers[user.userId] === false;
                   return (
-                    <div key={user.userId} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 bg-slate-50/30">
+                    <div key={user.userId} className="flex flex-col gap-2 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/10">
                       {/* User identity row */}
                       <div 
                         onClick={() => toggleUserExpanded(user.userId)}
-                        className="flex items-center justify-between px-2 py-1 bg-white hover:bg-slate-50 cursor-pointer rounded-xl border border-slate-100 shadow-sm transition-all select-none"
+                        className="flex items-center justify-between px-2 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all select-none"
                       >
                         <div className="flex items-center gap-2">
                           {isCollapsed ? (
@@ -449,12 +450,12 @@ export function DashboardView({
                           <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm uppercase shrink-0">
                             {user.username.charAt(0)}
                           </div>
-                          <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{user.username}</span>
-                          <span className="text-[9px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50 shrink-0">
+                          <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">{user.username}</span>
+                          <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200/50 dark:border-slate-700 shrink-0">
                             {user.uniqueBooks.length} active {user.uniqueBooks.length === 1 ? 'book' : 'books'}
                           </span>
                         </div>
-                        <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/50">
+                        <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-full border border-indigo-100/50 dark:border-indigo-900/50">
                           {formatTotalTime(user.totalTime)}
                         </span>
                       </div>
@@ -465,8 +466,8 @@ export function DashboardView({
                           {user.uniqueBooks.map(({ title, lastSession }) => {
                             const { itemId, progressPercent } = getSessionBookInfo(lastSession);
                             return (
-                              <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-100 transition-all group/book">
-                                <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 group-hover/book:scale-105 transition-transform relative">
+                              <div key={lastSession.id} className="flex items-center gap-3 p-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-100 dark:border-slate-800 transition-all group/book">
+                                <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 dark:border-slate-800 group-hover/book:scale-105 transition-transform relative">
                                   {itemId ? (
                                     <CoverImage 
                                       itemId={itemId} 
@@ -474,34 +475,34 @@ export function DashboardView({
                                       className="w-full h-full object-cover animate-fade-in" 
                                     />
                                   ) : (
-                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
                                       <BookOpen size={14} />
                                     </div>
                                   )}
                                 </div>
                                 <div className="flex-grow min-w-0">
-                                  <p className="text-xs font-bold text-slate-800 truncate group-hover/book:text-indigo-600 transition-colors">{title}</p>
+                                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover/book:text-indigo-600 dark:group-hover/book:text-indigo-400 transition-colors">{title}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     {progressPercent !== null && (
                                       <div className="flex items-center gap-1 shrink-0">
-                                        <span className="text-[9px] font-extrabold text-indigo-600 bg-indigo-50 px-1 rounded shrink-0">
+                                        <span className="text-[9px] font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1 rounded shrink-0">
                                           {progressPercent}%
                                         </span>
-                                        <div className="w-8 h-0.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
+                                        <div className="w-8 h-0.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shrink-0">
                                           <div 
-                                            className="h-full bg-indigo-600 rounded-full" 
+                                            className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full" 
                                             style={{ width: `${progressPercent}%` }}
                                           />
                                         </div>
                                       </div>
                                     )}
-                                    <span className="text-xs text-slate-400 font-medium truncate">
+                                    <span className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate">
                                       Session: {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
                                     </span>
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <p className="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                                  <p className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
                                 </div>
                               </div>
                             );
@@ -513,15 +514,15 @@ export function DashboardView({
                 })}
 
                 {filteredRecentActivityGrouped.length === 0 && (
-                  <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-12 flex-grow">
-                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+                  <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 py-12 flex-grow">
+                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center opacity-60">
                       <Activity size={18} className="text-slate-400" />
                     </div>
                     <div className="text-center">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                         {last7DaysActivitiesGrouped.length === 0 ? "Silence reigns" : "No results"}
                       </p>
-                      <p className="text-[8px] font-medium text-slate-400">
+                      <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500">
                         {last7DaysActivitiesGrouped.length === 0 
                           ? "No user activity recorded in the last 7 days." 
                           : "No activity matching your query."}
@@ -538,16 +539,16 @@ export function DashboardView({
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Listening History Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 overflow-hidden flex flex-col justify-between h-[360px]">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 overflow-hidden flex flex-col justify-between h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Listening History</h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Listening History</h3>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
                 Global hours consumed
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex bg-slate-100 p-0.5 rounded-lg">
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
                 {[
                   { label: '7D', value: '7' },
                   { label: '30D', value: '30' },
@@ -557,23 +558,23 @@ export function DashboardView({
                   <button
                     key={tf.value}
                     onClick={() => setTimeframe(tf.value as any)}
-                    className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${timeframe === tf.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                    className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer ${timeframe === tf.value ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'}`}
                   >
                     {tf.label}
                   </button>
                 ))}
               </div>
-              <div className="w-px h-4 bg-slate-200 mx-1"></div>
-              <div className="flex bg-slate-100 p-0.5 rounded-lg">
+              <div className="w-px h-4 bg-slate-250 dark:bg-slate-800 mx-1"></div>
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
                 <button 
                   onClick={() => setChartType('line')}
-                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${chartType === 'line' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer ${chartType === 'line' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'}`}
                 >
                   Line
                 </button>
                 <button 
                   onClick={() => setChartType('bar')}
-                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${chartType === 'bar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer ${chartType === 'bar' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'}`}
                 >
                   Bar
                 </button>
@@ -581,25 +582,25 @@ export function DashboardView({
             </div>
           </div>
           {sessionsLoading ? (
-            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse relative overflow-hidden select-none">
-              <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse relative overflow-hidden select-none">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px]">
                 <div className="flex flex-col items-center gap-2">
-                  <Activity size={24} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Analyzing listening trends...</p>
+                  <Activity size={24} className="text-indigo-500 dark:text-indigo-400 animate-spin" style={{ animationDuration: '3s' }} />
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Analyzing listening trends...</p>
                 </div>
               </div>
               <div className="flex items-end justify-between h-40 px-2 opacity-40">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div 
                     key={i} 
-                    className="w-4 bg-slate-200 rounded-t-sm" 
+                    className="w-4 bg-slate-200 dark:bg-slate-800 rounded-t-sm" 
                     style={{ height: `${Math.sin(i * 0.5) * 50 + 60}%` }}
                   />
                 ))}
               </div>
-              <div className="flex justify-between border-t border-slate-200/50 pt-2 px-1">
+              <div className="flex justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2 px-1">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-8 h-2.5 bg-slate-200 rounded-sm" />
+                  <div key={i} className="w-8 h-2.5 bg-slate-200 dark:bg-slate-800 rounded-sm" />
                 ))}
               </div>
             </div>
@@ -608,17 +609,21 @@ export function DashboardView({
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'line' ? (
                   <LineChart data={lineChartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} dy={5} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} dy={5} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#fff', 
+                        backgroundColor: isDark ? '#1e293b' : '#fff', 
                         borderRadius: '8px', 
-                        border: 'none', 
+                        border: isDark ? '1px solid #334155' : 'none', 
                         boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                         fontSize: '10px',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        color: isDark ? '#f8fafc' : '#0f172a'
+                      }}
+                      itemStyle={{
+                        color: isDark ? '#f8fafc' : '#0f172a'
                       }}
                     />
                     <Line 
@@ -626,23 +631,27 @@ export function DashboardView({
                       dataKey="hours" 
                       stroke="#6366f1" 
                       strokeWidth={2} 
-                      dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: '#fff' }} 
+                      dot={{ r: 3, fill: '#6366f1', strokeWidth: 1.5, stroke: isDark ? '#1e293b' : '#fff' }} 
                       activeDot={{ r: 5, strokeWidth: 0 }} 
                     />
                   </LineChart>
                 ) : (
                   <BarChart data={lineChartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} dy={5} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} dy={5} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#fff', 
+                        backgroundColor: isDark ? '#1e293b' : '#fff', 
                         borderRadius: '8px', 
-                        border: 'none', 
+                        border: isDark ? '1px solid #334155' : 'none', 
                         boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                         fontSize: '10px',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        color: isDark ? '#f8fafc' : '#0f172a'
+                      }}
+                      itemStyle={{
+                        color: isDark ? '#f8fafc' : '#0f172a'
                       }}
                     />
                     <Bar 
@@ -658,28 +667,28 @@ export function DashboardView({
         </div>
 
         {/* Top Activity Hours Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 overflow-hidden flex flex-col justify-between h-[360px]">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 overflow-hidden flex flex-col justify-between h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Activity Hours</h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Top Activity Hours</h3>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
                 Peak listening times (14D)
               </p>
             </div>
           </div>
           {sessionsLoading ? (
-            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse relative overflow-hidden select-none">
-              <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse relative overflow-hidden select-none">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px]">
                 <div className="flex flex-col items-center gap-2">
-                  <Activity size={24} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Analyzing peak hours...</p>
+                  <Activity size={24} className="text-indigo-500 dark:text-indigo-400 animate-spin" style={{ animationDuration: '3s' }} />
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Analyzing peak hours...</p>
                 </div>
               </div>
               <div className="flex items-end justify-between h-40 px-2 opacity-40">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div 
                     key={i} 
-                    className="w-4 bg-slate-200 rounded-t-sm" 
+                    className="w-4 bg-slate-200 dark:bg-slate-800 rounded-t-sm" 
                     style={{ height: `${Math.sin(i * 0.5) * 50 + 60}%` }}
                   />
                 ))}
@@ -689,17 +698,21 @@ export function DashboardView({
             <div className="h-[240px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={hourlyActivityData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} dy={5} interval={3} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} dy={5} interval={3} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#fff', 
+                      backgroundColor: isDark ? '#1e293b' : '#fff', 
                       borderRadius: '8px', 
-                      border: 'none', 
+                      border: isDark ? '1px solid #334155' : 'none', 
                       boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                       fontSize: '10px',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      color: isDark ? '#f8fafc' : '#0f172a'
+                    }}
+                    itemStyle={{
+                      color: isDark ? '#f8fafc' : '#0f172a'
                     }}
                   />
                   <Bar 
@@ -716,11 +729,11 @@ export function DashboardView({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
         {/* Recent Additions Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[360px]">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Recent Additions</h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Latest library items</p>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Recent Additions</h3>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">Latest library items</p>
             </div>
           </div>
           <div className="flex-grow overflow-y-auto no-scrollbar pr-1">
@@ -735,22 +748,22 @@ export function DashboardView({
         </div>
 
         {/* Most Listened Authors Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[360px]">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Authors</h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Listening time by author</p>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Top Authors</h3>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">Listening time by author</p>
             </div>
           </div>
           <div className="flex-grow overflow-y-auto no-scrollbar pr-1 flex flex-col gap-3">
             {topAuthors.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-16 flex-grow">
-                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+              <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 py-16 flex-grow">
+                <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center opacity-60">
                   <PenTool size={18} className="text-slate-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No author data</p>
-                  <p className="text-[8px] font-medium text-slate-400">No listening logs found for this timeframe.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">No author data</p>
+                  <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500">No listening logs found for this timeframe.</p>
                 </div>
               </div>
             ) : (
@@ -765,24 +778,24 @@ export function DashboardView({
                   .toUpperCase() || "??";
                 
                 return (
-                  <div key={author.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 hover:bg-slate-50/50 hover:border-slate-100 transition-all group select-none">
+                  <div key={author.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:border-slate-100 dark:hover:border-slate-800 transition-all group select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                          {initials}
+                           {initials}
                         </div>
-                        <span className="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                           {author.name}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-indigo-600 shrink-0">
+                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                         {formatTotalTime(author.time)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex-grow bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="flex-grow bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <div 
-                          className="bg-indigo-600 h-1.5 rounded-full transition-all duration-1000 group-hover:bg-indigo-500"
+                          className="bg-indigo-600 dark:bg-indigo-500 h-1.5 rounded-full transition-all duration-1000 group-hover:bg-indigo-500"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -795,22 +808,22 @@ export function DashboardView({
         </div>
 
         {/* Most Listened Genres Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[360px]">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">Top Genres</h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">Listening time by category</p>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Top Genres</h3>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">Listening time by category</p>
             </div>
           </div>
           <div className="flex-grow overflow-y-auto no-scrollbar pr-1 flex flex-col gap-3">
             {topGenres.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-slate-400 gap-2 py-16 flex-grow">
-                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center opacity-60">
+              <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 py-16 flex-grow">
+                <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center opacity-60">
                   <Compass size={18} className="text-slate-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No genre data</p>
-                  <p className="text-[8px] font-medium text-slate-400">No listening logs found for this timeframe.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">No genre data</p>
+                  <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500">No listening logs found for this timeframe.</p>
                 </div>
               </div>
             ) : (
@@ -820,13 +833,13 @@ export function DashboardView({
                 const style = getGenreStyle(genre.name);
                 
                 return (
-                  <div key={genre.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 hover:bg-slate-50/50 hover:border-slate-100 transition-all group select-none">
+                  <div key={genre.name} className="flex flex-col gap-1.5 p-2 rounded-xl border border-slate-50 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 hover:border-slate-100 dark:hover:border-slate-800 transition-all group select-none">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className={cn("w-8 h-8 rounded-full bg-gradient-to-tr text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform", style.bg)}>
                           <Tags size={12} />
                         </div>
-                        <span className="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                           {genre.name}
                         </span>
                       </div>
@@ -835,7 +848,7 @@ export function DashboardView({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex-grow bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="flex-grow bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <div 
                           className={cn("h-1.5 rounded-full transition-all duration-1000", style.barBg)}
                           style={{ width: `${percent}%` }}

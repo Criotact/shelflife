@@ -19,6 +19,7 @@ import {
 interface LibraryViewProps {
   books: Book[];
   libraries: Library[];
+  isDark?: boolean;
 }
 
 function formatBytes(bytes: number | undefined): string {
@@ -41,22 +42,27 @@ function formatDuration(seconds: number | undefined): string {
   return parts.join(" ");
 }
 
-const CustomChartTooltip = ({ active, payload }: any) => {
+const CustomChartTooltip = ({ active, payload, isDark }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-xl max-w-[240px] font-sans text-xs">
-        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{data.dateStr}</p>
-        <p className="font-bold text-slate-900 truncate" title={data.bookTitle}>{data.bookTitle}</p>
-        <p className="text-slate-500 font-medium truncate mb-2">{data.author}</p>
-        <div className="border-t border-slate-100 pt-2 flex flex-col gap-1.5">
+      <div className={cn(
+        "border p-3 rounded-2xl shadow-xl max-w-[240px] font-sans text-xs",
+        isDark 
+          ? "bg-slate-900 border-slate-800 text-slate-100 shadow-black/40" 
+          : "bg-white border-slate-200 text-slate-900 shadow-slate-200"
+      )}>
+        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{data.dateStr}</p>
+        <p className={cn("font-bold truncate", isDark ? "text-slate-100" : "text-slate-900")} title={data.bookTitle}>{data.bookTitle}</p>
+        <p className="text-slate-500 dark:text-slate-450 font-medium truncate mb-2">{data.author}</p>
+        <div className="border-t border-slate-100 dark:border-slate-800 pt-2 flex flex-col gap-1.5">
           <div className="flex justify-between items-center gap-4">
-            <span className="text-slate-400 font-medium text-[10px] uppercase tracking-wider">Book Length:</span>
-            <span className="font-bold text-slate-700">{formatDuration(data.rawDuration)}</span>
+            <span className="text-slate-400 dark:text-slate-500 font-medium text-[10px] uppercase tracking-wider">Book Length:</span>
+            <span className={cn("font-bold", isDark ? "text-slate-300" : "text-slate-700")}>{formatDuration(data.rawDuration)}</span>
           </div>
           <div className="flex justify-between items-center gap-4">
-            <span className="text-indigo-600 font-bold text-[10px] uppercase tracking-wider">Total Library:</span>
-            <span className="font-black text-indigo-600">{data.hours}h</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">Total Library:</span>
+            <span className="font-black text-indigo-650 dark:text-indigo-400">{data.hours}h</span>
           </div>
         </div>
       </div>
@@ -65,7 +71,7 @@ const CustomChartTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps) {
+export function LibraryView({ books: initialBooks, libraries, isDark = false }: LibraryViewProps) {
   const isMounted = useRef(true);
   useEffect(() => {
     isMounted.current = true;
@@ -275,20 +281,20 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
       {/* Upper Control Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Repository Management</h2>
-          <p className="text-xs text-slate-500 font-medium tracking-tight">Systematic overview of indexed digital assets.</p>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Repository Management</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-tight">Systematic overview of indexed digital assets.</p>
         </div>
         <div className="flex items-center gap-3">
           {libraries.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Node:</span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Node:</span>
               <select
                 value={selectedLibraryId}
                 onChange={(e) => {
                   setSelectedLibraryId(e.target.value);
                   setVisibleCount(15);
                 }}
-                className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none transition-all cursor-pointer hover:border-slate-300"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 outline-none transition-all cursor-pointer hover:border-slate-300 dark:hover:border-slate-700"
               >
                 {libraries.map((lib) => (
                   <option key={lib.id} value={lib.id}>
@@ -304,8 +310,8 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm",
               isRescanning 
-                ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
-                : "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-indigo-100"
+                ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed" 
+                : "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-indigo-100 dark:shadow-none"
             )}
           >
             <RefreshCw size={14} className={cn(isRescanning && "animate-spin")} />
@@ -319,21 +325,21 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
         {/* Metric Cards Stack */}
         <div className="lg:col-span-1">
           {/* MOBILE VIEW ONLY: Single Merged Metric Card */}
-          <div className="block lg:hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div className="block lg:hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
             <div className="grid grid-cols-2 gap-x-4 gap-y-4">
               {[
-                { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
-                { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
-                { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600", bg: "bg-emerald-50" },
-                { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600", bg: "bg-rose-50" },
+                { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+                { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+                { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+                { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30" },
               ].map((stat, idx) => (
-                <div key={stat.label} className={cn("flex items-center gap-3", idx % 2 === 1 && "pl-2 border-l border-slate-100")}>
+                <div key={stat.label} className={cn("flex items-center gap-3", idx % 2 === 1 && "pl-2 border-l border-slate-100 dark:border-slate-800")}>
                   <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", stat.bg, stat.color)}>
                     <stat.icon size={14} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">{stat.label}</p>
-                    <p className="text-xs font-bold text-slate-900 leading-none truncate">{stat.value}</p>
+                    <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5 truncate">{stat.label}</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-none truncate">{stat.value}</p>
                   </div>
                 </div>
               ))}
@@ -343,18 +349,18 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           {/* DESKTOP VIEW ONLY: Stacked Vertical Cards */}
           <div className="hidden lg:flex flex-col gap-3 h-full">
             {[
-              { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
-              { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
-              { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600", bg: "bg-emerald-50" },
-              { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600", bg: "bg-rose-50" },
+              { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+              { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+              { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+              { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30" },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white rounded-2xl border border-slate-200 p-3.5 flex items-center gap-3.5 shadow-sm flex-grow justify-start">
+              <div key={stat.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3.5 flex items-center gap-3.5 shadow-sm flex-grow justify-start">
                 <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", stat.bg, stat.color)}>
                   <stat.icon size={16} />
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 leading-none">{stat.label}</p>
-                  <p className="text-base font-extrabold text-slate-900 leading-none mt-1">{stat.value}</p>
+                  <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5 leading-none">{stat.label}</p>
+                  <p className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-none mt-1">{stat.value}</p>
                 </div>
               </div>
             ))}
@@ -362,18 +368,18 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
         </div>
 
         {/* Library Growth Chart Card (Occupies 3/4 columns on desktop) */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between h-[360px]">
+        <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col justify-between h-[360px]">
           <div className="flex items-center justify-between mb-4 px-2 shrink-0">
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                <TrendingUp size={14} className="text-indigo-600 animate-pulse" />
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight flex items-center gap-1.5">
+                <TrendingUp size={14} className="text-indigo-600 dark:text-indigo-400 animate-pulse" />
                 Library Growth
               </h3>
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
                 Cumulative playback hours indexed over time
               </p>
             </div>
-            <div className="flex bg-slate-100 p-0.5 rounded-lg">
+            <div className="flex bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
               {[
                 { label: '7D', value: '7' },
                 { label: '30D', value: '30' },
@@ -383,7 +389,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                 <button
                   key={tf.value}
                   onClick={() => setChartTimeframe(tf.value as any)}
-                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${chartTimeframe === tf.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer ${chartTimeframe === tf.value ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100'}`}
                 >
                   {tf.label}
                 </button>
@@ -392,20 +398,20 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           </div>
 
           {loading ? (
-            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse relative overflow-hidden select-none">
-              <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 dark:bg-slate-950/20 rounded-xl border border-slate-100 dark:border-slate-800/50 animate-pulse relative overflow-hidden select-none">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px]">
                 <div className="flex flex-col items-center gap-2">
                   <Clock size={24} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Syncing growth trends...</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Syncing growth trends...</p>
                 </div>
               </div>
             </div>
           ) : processedChartData.length === 0 ? (
-            <div className="h-[240px] w-full flex flex-col items-center justify-center text-slate-400 gap-2 border border-dashed border-slate-200 rounded-xl bg-slate-50/20">
-              <AlertCircle size={20} className="text-slate-400" />
+            <div className="h-[240px] w-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/20 dark:bg-slate-900/10">
+              <AlertCircle size={20} className="text-slate-400 dark:text-slate-500" />
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No indexing history</p>
-                <p className="text-[8px] font-medium text-slate-400">Add assets to start visualizing library growth.</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">No indexing history</p>
+                <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500">Add assets to start visualizing library growth.</p>
               </div>
             </div>
           ) : (
@@ -414,32 +420,32 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                 <AreaChart data={processedChartData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={isDark ? 0.35 : 0.2}/>
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
                   <XAxis 
                     dataKey="shortDate" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} 
+                    tick={{ fontSize: 9, fill: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 }} 
                     dy={5} 
                     minTickGap={20}
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} 
+                    tick={{ fontSize: 9, fill: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 }} 
                     tickFormatter={(v) => `${Math.round(v)}h`}
                   />
                   <Tooltip 
-                    content={<CustomChartTooltip />}
+                    content={<CustomChartTooltip isDark={isDark} />}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="hours" 
-                    stroke="#6366f1" 
+                    stroke={isDark ? "#818cf8" : "#6366f1"} 
                     strokeWidth={2} 
                     fillOpacity={1} 
                     fill="url(#colorHours)" 
@@ -452,11 +458,11 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
       </div>
 
       {/* Repository Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/30">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-slate-800/20">
           <div className="flex items-center gap-3 flex-grow max-w-2xl">
             <div className="relative flex-grow">
-              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input 
                 type="text" 
                 value={searchTerm}
@@ -465,18 +471,18 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                   setVisibleCount(15); // Reset visible count on search
                 }}
                 placeholder="Search volume by title, author, or ID..." 
-                className="w-full bg-white border border-slate-200 rounded-xl py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-2 focus:ring-indigo-100 text-slate-900 placeholder:text-slate-400 outline-none transition-all"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all"
               />
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sort:</span>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Sort:</span>
               <select
                 value={sortBy}
                 onChange={(e) => {
                   setSortBy(e.target.value as any);
                   setVisibleCount(15);
                 }}
-                className="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none transition-all cursor-pointer hover:border-slate-300"
+                className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 outline-none transition-all cursor-pointer hover:border-slate-300 dark:hover:border-slate-700"
               >
                 <option value="addedAt">Added On</option>
                 <option value="title">Title</option>
@@ -484,7 +490,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
               </select>
               <button
                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 bg-white flex items-center justify-center active:scale-95"
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-805 transition-colors text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-950 flex items-center justify-center active:scale-95 cursor-pointer"
                 title={`Sort ${sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
               >
                 {sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
@@ -492,16 +498,16 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-2">Display:</span>
+            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mr-2">Display:</span>
             <button 
               onClick={() => setViewMode('table')}
-              className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all", viewMode === 'table' ? "bg-white border border-slate-200 text-indigo-600" : "hover:bg-slate-50 text-slate-400")}
+              className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer", viewMode === 'table' ? "bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500")}
             >
               TABLE
             </button>
             <button 
               onClick={() => setViewMode('grid')}
-              className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all", viewMode === 'grid' ? "bg-white border border-slate-200 text-indigo-600" : "hover:bg-slate-50 text-slate-400")}
+              className={cn("p-1 px-2.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer", viewMode === 'grid' ? "bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500")}
             >
               GRID
             </button>
@@ -512,48 +518,48 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
+                <tr className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
                   <th 
-                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 transition-colors"
+                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors"
                     onClick={() => handleHeaderClick('title')}
                   >
                     <div className="flex items-center gap-1">
                       <span>Title / Author</span>
                       {sortBy === 'title' && (
-                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600" /> : <ArrowDown size={10} className="text-indigo-600" />
+                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600 dark:text-indigo-400" /> : <ArrowDown size={10} className="text-indigo-600" />
                       )}
                       {sortBy === 'author' && (
-                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600" /> : <ArrowDown size={10} className="text-indigo-600" />
+                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600 dark:text-indigo-400" /> : <ArrowDown size={10} className="text-indigo-600" />
                       )}
                     </div>
                   </th>
                   <th 
-                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 transition-colors"
+                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors"
                     onClick={() => handleHeaderClick('addedAt')}
                   >
                     <div className="flex items-center gap-1">
                       <span>Added On</span>
                       {sortBy === 'addedAt' && (
-                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600" /> : <ArrowDown size={10} className="text-indigo-600" />
+                        sortOrder === 'asc' ? <ArrowUp size={10} className="text-indigo-600 dark:text-indigo-400" /> : <ArrowDown size={10} className="text-indigo-600" />
                       )}
                     </div>
                   </th>
                   <th className="px-5 py-3 text-right select-none">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {loading ? (
                   <tr>
                     <td colSpan={3} className="px-5 py-12 text-center">
-                      <RefreshCw size={20} className="animate-spin text-indigo-600 mx-auto mb-2" />
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Syncing repository contents...</p>
+                      <RefreshCw size={20} className="animate-spin text-indigo-600 dark:text-indigo-400 mx-auto mb-2" />
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Syncing repository contents...</p>
                     </td>
                   </tr>
                 ) : paginatedBooks.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="px-5 py-12 text-center">
-                      <AlertCircle size={20} className="text-slate-400 mx-auto mb-2" />
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No assets match your search</p>
+                      <AlertCircle size={20} className="text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">No assets match your search</p>
                     </td>
                   </tr>
                 ) : (
@@ -564,11 +570,11 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                         setSelectedBookForDetails(book);
                         setInitialModalTab('details');
                       }}
-                      className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors cursor-pointer"
                     >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 flex items-center justify-center text-slate-300 relative">
+                          <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-300 dark:text-slate-600 relative">
                             <CoverImage
                               itemId={book.id}
                               title={book.metadata?.title}
@@ -576,13 +582,13 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                             />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{book.metadata?.title}</p>
-                            <p className="text-xs text-slate-500 font-medium">{book.metadata?.authorName}</p>
+                            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{book.metadata?.title}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{book.metadata?.authorName}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-3">
-                        <p className="text-[11px] font-bold text-slate-700">{formatDistanceToNow(book.addedAt)} ago</p>
+                        <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{formatDistanceToNow(book.addedAt)} ago</p>
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -593,9 +599,10 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                               setInitialModalTab('match');
                             }}
                             className={cn(
-                              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
-                              matchStatus[book.id] === 'success' ? "bg-emerald-50 text-emerald-600" :
-                              "bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white"
+                              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all cursor-pointer",
+                              matchStatus[book.id] === 'success' 
+                                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400" 
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-900 dark:hover:bg-slate-700 hover:text-white"
                             )}
                           >
                             {matchStatus[book.id] === 'success' ? <CheckCircle2 size={10} /> : <Sparkles size={10} />}
@@ -613,13 +620,13 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {loading ? (
               <div className="col-span-full py-12 text-center">
-                <RefreshCw size={20} className="animate-spin text-indigo-600 mx-auto mb-2" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Syncing repository contents...</p>
+                <RefreshCw size={20} className="animate-spin text-indigo-600 dark:text-indigo-400 mx-auto mb-2" />
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Syncing repository contents...</p>
               </div>
             ) : paginatedBooks.length === 0 ? (
               <div className="col-span-full py-12 text-center">
-                <AlertCircle size={20} className="text-slate-400 mx-auto mb-2" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No assets match your search</p>
+                <AlertCircle size={20} className="text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">No assets match your search</p>
               </div>
             ) : (
               paginatedBooks.map((book) => (
@@ -631,11 +638,11 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                   }}
                   className="group flex flex-col gap-2 cursor-pointer"
                 >
-                  <div className="w-full aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm group-hover:shadow-md group-hover:border-indigo-200 transition-all relative flex items-center justify-center text-slate-300">
+                  <div className="w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm group-hover:shadow-md group-hover:border-indigo-200 dark:group-hover:border-indigo-800/80 transition-all relative flex items-center justify-center text-slate-350 dark:text-slate-600">
                     <CoverImage
                       itemId={book.id}
                       title={book.metadata?.title}
-                      className="w-full h-full object-cover aspect-square"
+                      className="w-full h-full object-cover aspect-square animate-fade-in"
                     />
                     
                     <div className="absolute top-2 right-2 flex gap-1">
@@ -650,7 +657,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                             setSelectedBookForDetails(book);
                             setInitialModalTab('match');
                           }}
-                          className="w-6 h-6 rounded-full bg-white/90 backdrop-blur text-slate-600 hover:text-indigo-600 hover:bg-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                          className="w-6 h-6 rounded-full bg-white/90 dark:bg-slate-900/95 backdrop-blur text-slate-650 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                           title="Match Metadata"
                         >
                           <Sparkles size={12} />
@@ -659,8 +666,8 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-900 line-clamp-1 group-hover:text-indigo-600 transition-colors" title={book.metadata?.title}>{book.metadata?.title}</p>
-                    <p className="text-xs text-slate-500 font-medium line-clamp-1" title={book.metadata?.authorName}>{book.metadata?.authorName}</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={book.metadata?.title}>{book.metadata?.title}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1" title={book.metadata?.authorName}>{book.metadata?.authorName}</p>
                   </div>
                 </div>
               ))
@@ -669,18 +676,18 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
         )}
         
         {!loading && filteredBooks.length > visibleCount && (
-          <div className="p-3 bg-slate-50/50 border-t border-slate-200 flex items-center justify-center">
+          <div className="p-3 bg-slate-50/50 dark:bg-slate-850/20 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center">
             <button 
               onClick={() => setVisibleCount(prev => prev + 15)}
-              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest active:scale-95"
+              className="text-[10px] font-bold text-indigo-600 dark:text-indigo-450 hover:text-indigo-750 dark:hover:text-indigo-350 transition-colors uppercase tracking-widest active:scale-95 cursor-pointer"
             >
               Load More Assets ({filteredBooks.length - visibleCount} remaining)
             </button>
           </div>
         )}
         {!loading && filteredBooks.length <= visibleCount && filteredBooks.length > 0 && (
-          <div className="p-3 bg-slate-50/50 border-t border-slate-200 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <div className="p-3 bg-slate-50/50 dark:bg-slate-850/20 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               All {filteredBooks.length} assets displayed
             </span>
           </div>
@@ -695,6 +702,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             initialTab={initialModalTab}
             onClose={() => setSelectedBookForDetails(null)}
             onMatchSuccess={() => handleMatchSuccess(selectedBookForDetails.id)}
+            isDark={isDark}
           />
         )}
       </AnimatePresence>

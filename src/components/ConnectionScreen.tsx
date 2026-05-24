@@ -156,35 +156,35 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
   const isNative = Capacitor.isNativePlatform();
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 selection:bg-indigo-100 selection:text-indigo-900 font-sans">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 selection:bg-indigo-100 dark:selection:bg-indigo-950 selection:text-indigo-900 dark:selection:text-indigo-200 transition-colors duration-200 font-sans">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative overflow-hidden"
+        className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 p-8 sm:p-10 relative overflow-hidden"
       >
         {/* Sleek aesthetic background accent */}
-        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -z-10" />
+        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 dark:bg-indigo-950/20 rounded-bl-full -z-10" />
         
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-extrabold italic shadow-lg shadow-indigo-100 ring-4 ring-indigo-50 mx-auto mb-4">
+          <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-extrabold italic shadow-lg shadow-indigo-100 dark:shadow-none ring-4 ring-indigo-50 dark:ring-indigo-950/40 mx-auto mb-4">
             S
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900">
-            Shelf<span className="text-indigo-600">Life</span>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            Shelf<span className="text-indigo-600 dark:text-indigo-400">Life</span>
           </h2>
-          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-1.5">
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider mt-1.5 font-sans">
             Connect your Audiobookshelf Server
           </p>
         </div>
 
         {/* Browser security warning — hidden on native/Android */}
         {!isNative && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <ShieldAlert size={15} className="shrink-0 text-amber-600 mt-0.5" />
-            <p className="text-[11px] leading-relaxed text-amber-800 font-medium">
+          <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-amber-200 dark:border-amber-900/35 bg-amber-50 dark:bg-amber-955/20 px-4 py-3">
+            <ShieldAlert size={15} className="shrink-0 text-amber-650 dark:text-amber-400 mt-0.5" />
+            <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300 font-medium">
               <span className="font-bold">Testing only.</span>{" "}
-              Browser login stores credentials and headers in the browser, which is insecure. For production use, pass <code className="bg-amber-100 text-amber-900 px-1 rounded text-[10px] font-mono">ABS_URL</code> and <code className="bg-amber-100 text-amber-900 px-1 rounded text-[10px] font-mono">ABS_TOKEN</code> via your <code className="bg-amber-100 text-amber-900 px-1 rounded text-[10px] font-mono">.env</code> file instead.
+              Browser login stores credentials and headers in the browser, which is insecure. For production use, pass <code className="bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 px-1 rounded text-[10px] font-mono">ABS_URL</code> and <code className="bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 px-1 rounded text-[10px] font-mono">ABS_TOKEN</code> via your environment.
             </p>
           </div>
         )}
@@ -192,36 +192,36 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
         <form onSubmit={handleConnect} className="space-y-5">
           {/* Server URL Input */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
               Server URL
             </label>
-            <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-500 transition-all">
-              <Globe size={16} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+            <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-950/30 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 transition-all">
+              <Globe size={16} className="text-slate-400 dark:text-slate-550 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
               <input
                 type="text"
                 placeholder="https://abs.example.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={loading}
-                className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-800"
+                className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-404 dark:placeholder:text-slate-600 w-full outline-none text-slate-800 dark:text-slate-100"
                 required
               />
             </div>
-            <p className="text-[10px] text-slate-400/80 font-medium">
+            <p className="text-[10px] text-slate-400/80 dark:text-slate-500/80 font-medium">
               E.g. http://192.168.1.50:5000 or domain address
             </p>
           </div>
 
           {/* Auth Method Selector */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1 rounded-2xl border border-slate-200">
+          <div className="grid grid-cols-2 gap-2 bg-slate-55 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-808 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setAuthMethod("credentials")}
               disabled={loading}
-              className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+              className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 authMethod === "credentials"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white dark:bg-slate-800 text-indigo-650 dark:text-indigo-400 shadow-sm"
+                  : "text-slate-500 dark:text-slate-450 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               Credentials
@@ -230,10 +230,10 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
               type="button"
               onClick={() => setAuthMethod("token")}
               disabled={loading}
-              className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+              className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 authMethod === "token"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white dark:bg-slate-800 text-indigo-650 dark:text-indigo-400 shadow-sm"
+                  : "text-slate-500 dark:text-slate-450 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               API Token
@@ -253,18 +253,18 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
               >
                 {/* Username */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Username
                   </label>
-                  <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-500 transition-all">
-                    <User size={16} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-950/30 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 transition-all">
+                    <User size={16} className="text-slate-400 dark:text-slate-550 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
                     <input
                       type="text"
                       placeholder="Username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       disabled={loading}
-                      className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-800"
+                      className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-404 dark:placeholder:text-slate-600 w-full outline-none text-slate-800 dark:text-slate-100"
                       required={authMethod === "credentials"}
                     />
                   </div>
@@ -272,18 +272,18 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
 
                 {/* Password */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Password
                   </label>
-                  <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-500 transition-all">
-                    <Lock size={16} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-955 border border-slate-202 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-950/30 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 transition-all">
+                    <Lock size={16} className="text-slate-400 dark:text-slate-550 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
                     <input
                       type="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={loading}
-                      className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-800"
+                      className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-404 dark:placeholder:text-slate-600 w-full outline-none text-slate-800 dark:text-slate-100"
                       required={authMethod === "credentials"}
                     />
                   </div>
@@ -298,22 +298,22 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
                 transition={{ duration: 0.2 }}
                 className="space-y-1.5"
               >
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                   API Token / Personal Access Token
                 </label>
-                <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-500 transition-all">
-                  <Key size={16} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-950/30 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 transition-all">
+                  <Key size={16} className="text-slate-400 dark:text-slate-550 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
                   <input
                     type="password"
                     placeholder="Paste API token from User Settings"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     disabled={loading}
-                    className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-400 w-full outline-none text-slate-800"
+                    className="bg-transparent border-none text-xs font-semibold focus:ring-0 placeholder:text-slate-404 dark:placeholder:text-slate-600 w-full outline-none text-slate-800 dark:text-slate-100"
                     required={authMethod === "token"}
                   />
                 </div>
-                <p className="text-[10px] text-slate-400/80 font-medium">
+                <p className="text-[10px] text-slate-400/80 dark:text-slate-500/80 font-medium">
                   Can be generated in your Audiobookshelf User Profile under "API Tokens".
                 </p>
               </motion.div>
@@ -321,19 +321,19 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
           </AnimatePresence>
 
           {/* Advanced / Extra Headers */}
-          <div className="border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-950 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
-                <ShieldAlert size={13} className="text-slate-400" />
+                <ShieldAlert size={13} className="text-slate-400 dark:text-slate-550" />
                 Advanced
               </span>
               <ChevronDown
                 size={14}
-                className={`text-slate-400 transition-transform duration-200 ${
+                className={`text-slate-400 dark:text-slate-550 transition-transform duration-200 ${
                   showAdvanced ? "rotate-180" : ""
                 }`}
               />
@@ -348,8 +348,8 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
                   transition={{ duration: 0.22, ease: "easeInOut" }}
                   className="overflow-hidden"
                 >
-                  <div className="px-4 pb-4 pt-1 space-y-2 border-t border-slate-100">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                  <div className="px-4 pb-4 pt-1 space-y-2 border-t border-slate-100 dark:border-slate-800">
+                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                       Extra Auth Headers (JSON)
                     </label>
                     <textarea
@@ -359,13 +359,10 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
                       onChange={(e) => setExtraHeadersInput(e.target.value)}
                       disabled={loading}
                       spellCheck={false}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[11px] font-mono text-slate-800 placeholder:text-slate-400/70 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-[11px] font-mono text-slate-800 dark:text-slate-200 placeholder:text-slate-400/70 dark:placeholder:text-slate-600 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950/30 focus:border-indigo-400 dark:focus:border-indigo-500 transition-all"
                     />
-                    <p className="text-[10px] text-slate-400/80 font-medium leading-relaxed">
-                      Optional. For servers behind{" "}
-                      <span className="text-slate-500 font-semibold">Cloudflare Access</span>,
-                      paste your Service Token here as JSON.
-                      Leave blank if not applicable.
+                    <p className="text-[10px] text-slate-400/80 dark:text-slate-500 font-medium leading-relaxed">
+                      Optional. For servers behind <span className="text-slate-500 dark:text-slate-400 font-semibold">Cloudflare Access</span>, paste your Service Token JSON.
                     </p>
                   </div>
                 </motion.div>
@@ -383,14 +380,14 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
                   exit={{ opacity: 0, y: -8 }}
                   className={`p-4 rounded-2xl flex items-start gap-3 mb-4 text-xs font-semibold ${
                     status.type === "success"
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
-                      : "bg-rose-50 text-rose-800 border border-rose-100"
+                      ? "bg-emerald-50 dark:bg-emerald-955/20 text-emerald-800 dark:text-emerald-450 border border-emerald-100 dark:border-emerald-900/30"
+                      : "bg-rose-50 dark:bg-rose-955/20 text-rose-800 dark:text-rose-455 border border-rose-100 dark:border-rose-900/30"
                   }`}
                 >
                   {status.type === "success" ? (
-                    <Check size={16} className="shrink-0 text-emerald-600 mt-0.5" />
+                    <Check size={16} className="shrink-0 text-emerald-650 dark:text-emerald-400 mt-0.5" />
                   ) : (
-                    <AlertCircle size={16} className="shrink-0 text-rose-600 mt-0.5" />
+                    <AlertCircle size={16} className="shrink-0 text-rose-650 dark:text-rose-400 mt-0.5" />
                   )}
                   <div className="leading-relaxed">{status.message}</div>
                 </motion.div>
@@ -400,7 +397,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[11px] font-bold uppercase tracking-wider transition-all hover:shadow-lg hover:shadow-indigo-100 flex items-center justify-center gap-2 group disabled:opacity-50"
+              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[11px] font-bold uppercase tracking-wider transition-all hover:shadow-lg hover:shadow-indigo-105 dark:hover:shadow-none flex items-center justify-center gap-2 group disabled:opacity-50 cursor-pointer active:scale-98"
             >
               {loading ? (
                 <>

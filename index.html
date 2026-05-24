@@ -3,7 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>ShelfLife</title>
+    <meta name="color-scheme" content="light dark">
+    <script>
+      {
+        const colorScheme = localStorage.getItem("theme");
+        if (colorScheme) {
+          document.querySelector('meta[name="color-scheme"]').content = colorScheme;
+          if (colorScheme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else if (colorScheme === "light") {
+            document.documentElement.classList.remove("dark");
+          }
+        } else {
+          if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+          }
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

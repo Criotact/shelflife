@@ -6,12 +6,19 @@ import { cn } from "../lib/utils";
 interface ActivityHeatmapProps {
   data: Record<string, number>; // date string (YYYY-MM-DD) -> duration in seconds
   title: string;
+  isDark?: boolean;
 }
 
-export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
+export function ActivityHeatmap({ data, title, isDark = false }: ActivityHeatmapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const levelStyles = [
+  const levelStyles = isDark ? [
+    "bg-slate-800", // heatmap-0
+    "bg-indigo-950", // heatmap-1
+    "bg-indigo-700", // heatmap-2
+    "bg-indigo-500", // heatmap-3
+    "bg-indigo-400", // heatmap-4
+  ] : [
     "bg-slate-100", // heatmap-0
     "bg-indigo-100", // heatmap-1
     "bg-indigo-300", // heatmap-2
@@ -74,7 +81,13 @@ export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
       hovertext[r][c] = formatHoverText(day, durationSeconds);
     });
 
-    const colorscale: [number, string][] = [
+    const colorscale: [number, string][] = isDark ? [
+      [0.0, '#1e293b'],   // level 0: slate-800
+      [0.25, '#1e1b4b'],  // level 1: indigo-950
+      [0.5, '#4338ca'],   // level 2: indigo-700
+      [0.75, '#6366f1'],  // level 3: indigo-500
+      [1.0, '#818cf8'],   // level 4: indigo-400
+    ] : [
       [0.0, '#f1f5f9'],   // level 0: slate-100
       [0.25, '#e0e7ff'],  // level 1: indigo-100
       [0.5, '#c7d2fe'],   // level 2: indigo-300
@@ -96,12 +109,12 @@ export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
       hoverinfo: 'text' as const,
       text: hovertext as any,
       hoverlabel: {
-        bgcolor: '#0f172a',
-        bordercolor: '#0f172a',
+        bgcolor: isDark ? '#1e293b' : '#0f172a',
+        bordercolor: isDark ? '#334155' : '#0f172a',
         font: {
           family: 'Inter, system-ui, sans-serif',
           size: 10,
-          color: '#ffffff'
+          color: isDark ? '#f8fafc' : '#ffffff'
         },
         align: 'left' as const
       }
@@ -123,7 +136,7 @@ export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
         tickfont: {
           family: 'Inter, system-ui, sans-serif',
           size: 8,
-          color: '#94a3b8',
+          color: isDark ? '#94a3b8' : '#64748b',
           weight: 'bold' as const
         }
       },
@@ -139,7 +152,7 @@ export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
         tickfont: {
           family: 'Inter, system-ui, sans-serif',
           size: 8,
-          color: '#94a3b8',
+          color: isDark ? '#94a3b8' : '#64748b',
           weight: 'bold' as const
         }
       }
@@ -158,28 +171,28 @@ export function ActivityHeatmap({ data, title }: ActivityHeatmapProps) {
         Plotly.purge(containerRef.current);
       }
     };
-  }, [data]);
+  }, [data, isDark]);
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header Info */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-tight">{title}</h2>
-          <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
+          <h2 className="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">{title}</h2>
+          <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
             Playback intensity over the last 12 months
           </p>
         </div>
         
         {/* Dynamic Legend */}
-        <div className="flex gap-3 items-center bg-slate-50 px-2 py-1 rounded-lg border border-slate-200">
-          <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Quiet</span>
+        <div className="flex gap-3 items-center bg-slate-55 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+          <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">Quiet</span>
           <div className="flex gap-1">
             {levelStyles.map((style, i) => (
-              <div key={i} className={cn("w-2 h-2 rounded-sm", style)} />
+              <div key={i} className={cn("w-2 h-2 rounded-sm border border-black/5 dark:border-white/5", style)} />
             ))}
           </div>
-          <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Vibrant</span>
+          <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">Vibrant</span>
         </div>
       </div>
 

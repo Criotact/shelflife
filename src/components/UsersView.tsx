@@ -18,9 +18,10 @@ interface UsersViewProps {
   userStats: UserStats[];
   books: Book[];
   sessionsLoading: boolean;
+  isDark?: boolean;
 }
 
-export function UsersView({ users, sessions, userStats, books, sessionsLoading }: UsersViewProps) {
+export function UsersView({ users, sessions, userStats, books, sessionsLoading, isDark = false }: UsersViewProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   type ViewMode = 'recent' | 'all-books' | 'full-log';
@@ -164,10 +165,10 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       {/* Sidebar List */}
       <div className="lg:col-span-3 flex flex-col gap-3">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 overflow-hidden flex flex-col gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 overflow-hidden flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Active Accounts</h3>
-            <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">{users.length} Total</span>
+            <h3 className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Active Accounts</h3>
+            <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">{users.length} Total</span>
           </div>
           
           <div className="relative">
@@ -177,7 +178,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
               placeholder="Search user..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border-none rounded-lg py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-1 focus:ring-indigo-100 text-slate-900 placeholder:text-slate-400"
+              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg py-1.5 pl-9 pr-3 text-[11px] font-medium focus:ring-1 focus:ring-indigo-100 dark:focus:ring-indigo-950/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
           </div>
 
@@ -191,23 +192,23 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                   key={user.id}
                   onClick={() => setSelectedUserId(user.id)}
                   className={cn(
-                    "flex items-center justify-between p-2 rounded-xl transition-all group",
-                    isActive ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "hover:bg-slate-50"
+                    "flex items-center justify-between p-2 rounded-xl transition-all group cursor-pointer",
+                    isActive ? "bg-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                   )}
                 >
                   <div className="flex items-center gap-2 text-left">
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center border",
-                      isActive ? "bg-white/20 border-white/20" : "bg-white border-slate-200 shadow-sm"
+                      isActive ? "bg-white/20 border-white/20" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm"
                     )}>
-                      <UserIcon size={14} className={isActive ? "text-white" : "text-slate-600"} />
+                      <UserIcon size={14} className={isActive ? "text-white" : "text-slate-600 dark:text-slate-400"} />
                     </div>
                     <div>
-                      <p className={cn("text-[11px] font-bold uppercase tracking-tight", isActive ? "text-white" : "text-slate-900")}>
+                      <p className={cn("text-[11px] font-bold uppercase tracking-tight", isActive ? "text-white" : "text-slate-900 dark:text-slate-100")}>
                         {user.username}
                       </p>
                       {user.type === 'admin' && (
-                        <p className={cn("text-[9px] font-medium", isActive ? "text-white/60" : "text-slate-400")}>
+                        <p className={cn("text-[9px] font-medium", isActive ? "text-white/60" : "text-slate-400 dark:text-slate-500")}>
                           System Admin
                         </p>
                       )}
@@ -215,8 +216,8 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                   </div>
                   {!isActive && stats && (
                     <div className="text-right">
-                      <p className="text-[9px] font-bold text-slate-900">{formatTotalTime(stats.totalTime)}</p>
-                      <p className="text-[8px] text-slate-400 uppercase font-bold">Logged</p>
+                      <p className="text-[9px] font-bold text-slate-900 dark:text-slate-200">{formatTotalTime(stats.totalTime)}</p>
+                      <p className="text-[8px] text-slate-400 dark:text-slate-500 uppercase font-bold">Logged</p>
                     </div>
                   )}
                 </button>
@@ -229,40 +230,40 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
       {/* Detail View */}
       <div className="lg:col-span-9">
         {!selectedUserId ? (
-          <div className="bg-white rounded-2xl border border-slate-200 border-dashed h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 gap-3 p-8">
-            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center opacity-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 border-dashed h-full min-h-[400px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-3 p-8">
+            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800/40 rounded-full flex items-center justify-center opacity-50">
               <Users size={24} />
             </div>
             <div className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Pick a listener</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Pick a listener</p>
               <p className="text-[9px] font-medium">Select a user from the list to view their deep metrics and listening logs.</p>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
             {/* Header / Stats */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 relative overflow-hidden">
                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 border-2 border-white">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100/50 dark:shadow-none border-2 border-white dark:border-slate-800 animate-fade-in">
                   <UserIcon size={32} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">{selectedUser?.username}</h2>
-                    <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-bold uppercase tracking-widest">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">{selectedUser?.username}</h2>
+                    <span className="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded text-[9px] font-bold uppercase tracking-widest">
                       {selectedUser?.type}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-1.5 text-slate-500">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                       <Clock size={12} />
                       <span className="text-[10px] font-bold">{formatTotalTime(selectedUserStats?.totalTime || 0)} Total Time</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-500">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                       <TrendingUp size={12} />
                       <span className="text-[10px] font-bold">{formatDuration(selectedUserStats?.avgDaily || 0)}/Day Avg</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-500">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                       <Calendar size={12} />
                       <span className="text-[10px] font-bold">Joined {selectedUserStats?.joinedAt ? format(selectedUserStats.joinedAt, "MMM yyyy") : "Unknown"}</span>
                     </div>
@@ -273,21 +274,21 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-                <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight mb-4">Recent Activity (14 Days)</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                <h3 className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight mb-4">Recent Activity (14 Days)</h3>
                 {sessionsLoading ? (
-                  <div className="h-[180px] w-full flex flex-col justify-end gap-3 p-2 bg-slate-50/50 rounded-xl animate-pulse relative overflow-hidden select-none">
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/40">
-                      <Clock size={20} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
+                  <div className="h-[180px] w-full flex flex-col justify-end gap-3 p-2 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse relative overflow-hidden select-none">
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/40 dark:bg-slate-900/40">
+                      <Clock size={20} className="text-indigo-500 dark:text-indigo-400 animate-spin" style={{ animationDuration: '3s' }} />
                     </div>
                     <div className="flex items-end justify-between h-[120px] px-1 opacity-30">
                       {Array.from({ length: 14 }).map((_, i) => (
-                        <div key={i} className="w-3 bg-slate-200 rounded-t-sm" style={{ height: `${(i % 3) * 30 + 20}%` }} />
+                        <div key={i} className="w-3 bg-slate-200 dark:bg-slate-800 rounded-t-sm" style={{ height: `${(i % 3) * 30 + 20}%` }} />
                       ))}
                     </div>
-                    <div className="flex justify-between border-t border-slate-200/50 pt-2 px-1 opacity-20">
+                    <div className="flex justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2 px-1 opacity-20">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="w-6 h-2 bg-slate-200 rounded-sm" />
+                        <div key={i} className="w-6 h-2 bg-slate-200 dark:bg-slate-800 rounded-sm" />
                       ))}
                     </div>
                   </div>
@@ -295,17 +296,21 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                   <div className="h-[180px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={userActivityChartData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#94a3b8', fontWeight: 600 }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#94a3b8', fontWeight: 600 }} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                         <Tooltip 
                           contentStyle={{ 
-                            backgroundColor: '#fff', 
+                            backgroundColor: isDark ? '#1e293b' : '#fff', 
                             borderRadius: '8px', 
-                            border: 'none', 
+                            border: isDark ? '1px solid #334155' : 'none', 
                             boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                             fontSize: '10px',
-                            fontWeight: '600'
+                            fontWeight: '600',
+                            color: isDark ? '#f8fafc' : '#0f172a'
+                          }}
+                          itemStyle={{
+                            color: isDark ? '#f8fafc' : '#0f172a'
                           }}
                         />
                         <Bar dataKey="hours" fill="#6366f1" radius={[2, 2, 0, 0]} barSize={16} />
@@ -315,21 +320,21 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                 )}
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-                <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight mb-4">Active Hours (14 Days)</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                <h3 className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight mb-4">Active Hours (14 Days)</h3>
                 {sessionsLoading ? (
-                  <div className="h-[180px] w-full flex flex-col justify-end gap-3 p-2 bg-slate-50/50 rounded-xl animate-pulse relative overflow-hidden select-none">
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/40">
-                      <Clock size={20} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
+                  <div className="h-[180px] w-full flex flex-col justify-end gap-3 p-2 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse relative overflow-hidden select-none">
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/40 dark:bg-slate-900/40">
+                      <Clock size={20} className="text-indigo-500 dark:text-indigo-400 animate-spin" style={{ animationDuration: '3s' }} />
                     </div>
                     <div className="flex items-end justify-between h-[120px] px-1 opacity-30">
                       {Array.from({ length: 24 }).map((_, i) => (
-                        <div key={i} className="w-1 bg-slate-200 rounded-t-sm" style={{ height: `${(i % 5) * 20 + 20}%` }} />
+                        <div key={i} className="w-1 bg-slate-200 dark:bg-slate-800 rounded-t-sm" style={{ height: `${(i % 5) * 20 + 20}%` }} />
                       ))}
                     </div>
-                    <div className="flex justify-between border-t border-slate-200/50 pt-2 px-1 opacity-20">
+                    <div className="flex justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2 px-1 opacity-20">
                       {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="w-6 h-2 bg-slate-200 rounded-sm" />
+                        <div key={i} className="w-6 h-2 bg-slate-200 dark:bg-slate-800 rounded-sm" />
                       ))}
                     </div>
                   </div>
@@ -337,17 +342,21 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                   <div className="h-[180px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={userHourlyActivityData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#94a3b8', fontWeight: 600 }} interval={3} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#94a3b8', fontWeight: 600 }} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
+                        <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} interval={3} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: isDark ? '#64748b' : '#94a3b8', fontWeight: 600 }} />
                         <Tooltip 
                           contentStyle={{ 
-                            backgroundColor: '#fff', 
+                            backgroundColor: isDark ? '#1e293b' : '#fff', 
                             borderRadius: '8px', 
-                            border: 'none', 
+                            border: isDark ? '1px solid #334155' : 'none', 
                             boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                             fontSize: '10px',
-                            fontWeight: '600'
+                            fontWeight: '600',
+                            color: isDark ? '#f8fafc' : '#0f172a'
+                          }}
+                          itemStyle={{
+                            color: isDark ? '#f8fafc' : '#0f172a'
                           }}
                         />
                         <Bar dataKey="hours" fill="#6366f1" radius={[2, 2, 0, 0]} />
@@ -359,19 +368,20 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
             </div>
 
             {/* Heatmap */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
               <ActivityHeatmap 
                 title="Yearly Listening Intensity"
                 data={selectedUserStats?.activity || {}}
+                isDark={isDark}
               />
             </div>
 
             {/* Session Logs */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-              <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Listening Sessions</h3>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
+                  <h3 className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Listening Sessions</h3>
+                  <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
                     {viewMode === 'recent' && "Books listened to in the last 14 days"}
                     {viewMode === 'all-books' && `All unique books (${progressFilter} progress)`}
                     {viewMode === 'full-log' && "Detailed chronological playback history"}
@@ -379,7 +389,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {/* View Mode Selector */}
-                  <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
+                  <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
                     {[
                       { label: "Recent", value: "recent" },
                       { label: "All Books", value: "all-books" },
@@ -389,10 +399,10 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                         key={mode.value}
                         onClick={() => setViewMode(mode.value as ViewMode)}
                         className={cn(
-                          "px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all",
+                          "px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer",
                           viewMode === mode.value 
-                            ? 'bg-white text-indigo-600 shadow-sm' 
-                            : 'text-slate-500 hover:text-slate-900'
+                            ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                         )}
                       >
                         {mode.label}
@@ -402,7 +412,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
 
                   {/* Progress Filter (only shown when viewMode is 'all-books') */}
                   {viewMode === 'all-books' && (
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50 animate-pulse-subtle">
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50 animate-pulse-subtle">
                       {[
                         { label: "All Status", value: "all" },
                         { label: "Completed (>99%)", value: "completed" },
@@ -412,10 +422,10 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                           key={filter.value}
                           onClick={() => setProgressFilter(filter.value as ProgressFilter)}
                           className={cn(
-                            "px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all",
+                            "px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all cursor-pointer",
                             progressFilter === filter.value 
-                              ? 'bg-indigo-600 text-white shadow-sm' 
-                              : 'text-slate-500 hover:text-slate-900'
+                              ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-sm' 
+                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                           )}
                         >
                           {filter.label}
@@ -427,8 +437,8 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50/50">
-                    <tr className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
+                  <thead className="bg-slate-50/50 dark:bg-slate-800/20">
+                    <tr className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
                       <th className="px-4 py-2">
                         {viewMode === 'full-log' ? "Title" : "Book Title"}
                       </th>
@@ -440,25 +450,25 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                     {sessionsLoading ? (
                       Array.from({ length: 5 }).map((_, rIdx) => (
-                        <tr key={rIdx} className="animate-pulse bg-white/20 select-none">
+                        <tr key={rIdx} className="animate-pulse bg-white/20 dark:bg-slate-800/10 select-none">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded bg-slate-200 shrink-0" />
+                              <div className="w-8 h-8 rounded bg-slate-200 dark:bg-slate-800 shrink-0" />
                               <div className="flex-grow">
-                                <div className="w-32 h-3 bg-slate-200 rounded mb-1" />
-                                <div className="w-20 h-2 bg-slate-100 rounded" />
+                                <div className="w-32 h-3 bg-slate-200 dark:bg-slate-800 rounded mb-1" />
+                                <div className="w-20 h-2 bg-slate-100 dark:bg-slate-850 rounded" />
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="w-12 h-3.5 bg-slate-200 rounded" />
+                            <div className="w-12 h-3.5 bg-slate-200 dark:bg-slate-800 rounded" />
                           </td>
                           <td className="px-4 py-3">
-                            <div className="w-16 h-3 bg-slate-200 rounded mb-1" />
-                            <div className="w-10 h-2 bg-slate-100 rounded" />
+                            <div className="w-16 h-3 bg-slate-200 dark:bg-slate-800 rounded mb-1" />
+                            <div className="w-10 h-2 bg-slate-100 dark:bg-slate-850 rounded" />
                           </td>
                         </tr>
                       ))
@@ -467,10 +477,10 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                         filteredAllUserBooks.map(({ title, lastSession }) => {
                           const { itemId, progressPercent } = getSessionBookInfo(lastSession);
                           return (
-                            <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
+                            <tr key={lastSession.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 relative">
+                                  <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 dark:border-slate-800 relative">
                                     {itemId ? (
                                       <CoverImage 
                                         itemId={itemId} 
@@ -478,22 +488,22 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                         className="w-full h-full object-cover animate-fade-in" 
                                       />
                                     ) : (
-                                      <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                      <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
                                         <BookOpen size={14} />
                                       </div>
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-xs font-bold text-slate-900 line-clamp-1">{title}</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">{title}</p>
                                     <div className="flex items-center gap-2 mt-1">
                                       {progressPercent !== null && (
                                         <div className="flex items-center gap-1.5">
-                                          <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded">
+                                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1 py-0.2 rounded">
                                             {progressPercent}%
                                           </span>
-                                          <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                          <div className="w-12 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                             <div 
-                                              className="h-full bg-indigo-600 rounded-full" 
+                                              className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full" 
                                               style={{ width: `${progressPercent}%` }}
                                             />
                                           </div>
@@ -503,19 +513,19 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-4 py-2 font-bold text-slate-700 text-[11px]">
+                              <td className="px-4 py-2 font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                                 {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
                               </td>
                               <td className="px-4 py-2">
-                                <p className="text-[10px] font-medium text-slate-500">{format(lastSession.startedAt, "MMM d, HH:mm")}</p>
-                                <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{format(lastSession.startedAt, "MMM d, HH:mm")}</p>
+                                <p className="text-[8px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
                               </td>
                             </tr>
                           );
                         })
                       ) : (
                         <tr>
-                          <td colSpan={3} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
+                          <td colSpan={3} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500 text-[10px] font-medium">
                             No books matched the selected progress filter.
                           </td>
                         </tr>
@@ -524,10 +534,10 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                       selectedUserSessions.map((session) => {
                         const { itemId, progressPercent } = getSessionBookInfo(session);
                         return (
-                          <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
+                          <tr key={session.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="px-4 py-2">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 relative">
+                                <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 dark:border-slate-800 relative">
                                   {itemId ? (
                                     <CoverImage 
                                       itemId={itemId} 
@@ -535,22 +545,22 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                       className="w-full h-full object-cover animate-fade-in" 
                                     />
                                   ) : (
-                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
                                       <BookOpen size={14} />
                                     </div>
                                   )}
                                 </div>
                                 <div>
-                                  <p className="text-xs font-bold text-slate-900 line-clamp-1">{session.displayTitle || session.mediaItemTitle}</p>
+                                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">{session.displayTitle || session.mediaItemTitle}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     {progressPercent !== null && (
                                       <div className="flex items-center gap-1.5">
-                                        <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded">
+                                        <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1 py-0.2 rounded">
                                           {progressPercent}%
                                         </span>
-                                        <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="w-12 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                           <div 
-                                            className="h-full bg-indigo-600 rounded-full" 
+                                            className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full" 
                                             style={{ width: `${progressPercent}%` }}
                                           />
                                         </div>
@@ -560,12 +570,12 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-2 font-bold text-slate-700 text-[11px]">
+                            <td className="px-4 py-2 font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                               {formatDuration(session.timeListening || session.duration || 0)}
                             </td>
                             <td className="px-4 py-2">
-                              <p className="text-[10px] font-medium text-slate-500">{format(session.startedAt, "MMM d, HH:mm")}</p>
-                              <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(session.startedAt)} ago</p>
+                              <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{format(session.startedAt, "MMM d, HH:mm")}</p>
+                              <p className="text-[8px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tight">{formatDistanceToNow(session.startedAt)} ago</p>
                             </td>
                           </tr>
                         );
@@ -575,10 +585,10 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                         last14DaysBooks.map(({ title, lastSession }) => {
                           const { itemId, progressPercent } = getSessionBookInfo(lastSession);
                           return (
-                            <tr key={lastSession.id} className="group hover:bg-slate-50/50 transition-colors">
+                            <tr key={lastSession.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 relative">
+                                  <div className="w-8 h-8 aspect-square rounded overflow-hidden shadow-sm shrink-0 border border-slate-200/50 dark:border-slate-800 relative">
                                     {itemId ? (
                                       <CoverImage 
                                         itemId={itemId} 
@@ -586,22 +596,22 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                         className="w-full h-full object-cover animate-fade-in" 
                                       />
                                     ) : (
-                                      <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                      <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500">
                                         <BookOpen size={14} />
                                       </div>
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-xs font-bold text-slate-900 line-clamp-1">{title}</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">{title}</p>
                                     <div className="flex items-center gap-2 mt-1">
                                       {progressPercent !== null && (
                                         <div className="flex items-center gap-1.5">
-                                          <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded">
+                                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1 py-0.2 rounded">
                                             {progressPercent}%
                                           </span>
-                                          <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                          <div className="w-12 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                             <div 
-                                              className="h-full bg-indigo-600 rounded-full" 
+                                              className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full" 
                                               style={{ width: `${progressPercent}%` }}
                                             />
                                           </div>
@@ -611,19 +621,19 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading }
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-4 py-2 font-bold text-slate-700 text-[11px]">
+                              <td className="px-4 py-2 font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                                 {formatDuration(lastSession.timeListening || lastSession.duration || 0)}
                               </td>
                               <td className="px-4 py-2">
-                                <p className="text-[10px] font-medium text-slate-500">{format(lastSession.startedAt, "MMM d, HH:mm")}</p>
-                                <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{format(lastSession.startedAt, "MMM d, HH:mm")}</p>
+                                <p className="text-[8px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
                               </td>
                             </tr>
                           );
                         })
                       ) : (
                         <tr>
-                          <td colSpan={3} className="px-4 py-8 text-center text-slate-400 text-[10px] font-medium">
+                          <td colSpan={3} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500 text-[10px] font-medium">
                             No books listened to in the last 14 days. Select "All Books" or "Full Log" to see historical data.
                           </td>
                         </tr>

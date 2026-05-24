@@ -1,12 +1,15 @@
-import { Power, ShieldCheck } from "lucide-react";
+import { Power, ShieldCheck, Sun, Moon } from "lucide-react";
 import { api } from "../lib/api";
+import { cn } from "../lib/utils";
 
 interface SettingsViewProps {
   onDisconnect?: () => void;
   onHeadersSaved?: () => void;
+  darkMode?: boolean;
+  setDarkMode?: (dark: boolean) => void;
 }
 
-export function SettingsView({ onDisconnect }: SettingsViewProps) {
+export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: SettingsViewProps) {
   const config = api.getConfig();
   const isDirect = api.isDirectMode();
 
@@ -16,42 +19,42 @@ export function SettingsView({ onDisconnect }: SettingsViewProps) {
   return (
     <div className="flex flex-col gap-6 font-sans max-w-4xl">
       <div className="flex flex-col gap-0.5">
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">System Configuration</h2>
-        <p className="text-xs text-slate-500 font-medium tracking-tight">Manage your instance preferences and system-wide settings.</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">System Configuration</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-tight">Manage your instance preferences and system-wide settings.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Connection Profile Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between min-h-[280px]">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between min-h-[300px]">
           <div>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Node Connection</h4>
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Node Connection</h4>
             </div>
             
             <div className="space-y-4 mb-6">
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Endpoint Address</span>
-                <span className="text-xs font-bold text-slate-900 break-all">{config?.url || 'Relative Host'}</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Endpoint Address</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 break-all">{config?.url || 'Relative Host'}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Routing State</span>
-                <span className="text-xs font-bold text-slate-700">{isDirect ? 'Secure Client-to-API' : 'Encapsulated Express Proxy'}</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Routing State</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{isDirect ? 'Secure Client-to-API' : 'Encapsulated Express Proxy'}</span>
               </div>
               
               {hasExtraHeaders && (
                 <div className="space-y-1 pt-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Active Auth Headers</span>
-                    <div className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[8px] font-extrabold uppercase flex items-center gap-0.5">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Active Auth Headers</span>
+                    <div className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[8px] font-extrabold uppercase flex items-center gap-0.5">
                       <ShieldCheck size={8} />
                       Active
                     </div>
                   </div>
-                  <div className="space-y-1.5 mt-1 bg-slate-50 border border-slate-200/60 rounded-xl p-3">
+                  <div className="space-y-1.5 mt-1 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl p-3">
                     {Object.entries(currentExtraHeaders).map(([key]) => (
                       <div key={key} className="flex items-center justify-between text-[11px] font-medium font-sans">
-                        <span className="font-semibold text-slate-600 font-mono break-all pr-2">{key}</span>
-                        <span className="text-slate-400 font-mono text-[9px] shrink-0">••••••••</span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-405 font-mono break-all pr-2">{key}</span>
+                        <span className="text-slate-400 dark:text-slate-550 font-mono text-[9px] shrink-0">••••••••</span>
                       </div>
                     ))}
                   </div>
@@ -63,7 +66,7 @@ export function SettingsView({ onDisconnect }: SettingsViewProps) {
           {onDisconnect && (
             <button 
               onClick={onDisconnect}
-              className="w-full py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100/70 border border-rose-100 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors shadow-sm mt-4"
+              className="w-full py-2.5 bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-950/40 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all shadow-sm mt-4 cursor-pointer active:scale-98"
             >
               <Power size={12} />
               Disconnect Server
@@ -71,28 +74,86 @@ export function SettingsView({ onDisconnect }: SettingsViewProps) {
           )}
         </div>
 
-        {/* Version Info Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between min-h-[280px]">
+        {/* Theme Settings Section */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between min-h-[300px]">
           <div>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Version Info</h4>
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Interface Theme</h4>
             </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 text-xs">
-                <span className="font-bold text-slate-500">Node ID</span>
-                <span className="font-bold text-slate-900">AS-77LX-09</span>
+            
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-6">
+              Customize the visual look and feel of your audiobookshelf dashboard interface.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => setDarkMode?.(false)}
+                className={cn(
+                  "flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all cursor-pointer gap-2",
+                  !darkMode 
+                    ? "border-indigo-650 bg-indigo-50/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm shadow-indigo-100/30" 
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-white dark:bg-slate-950 text-slate-655 dark:text-slate-400"
+                )}
+              >
+                <div className={cn("p-2 rounded-lg", !darkMode ? "bg-indigo-100/80 text-indigo-600" : "bg-slate-100 dark:bg-slate-850 text-slate-500")}>
+                  <Sun size={20} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold leading-none">Light</span>
+                  <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-medium">Clean and radiant layout</span>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setDarkMode?.(true)}
+                className={cn(
+                  "flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all cursor-pointer gap-2",
+                  darkMode 
+                    ? "border-indigo-600 dark:border-indigo-500 bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm" 
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-white dark:bg-slate-950 text-slate-655 dark:text-slate-400"
+                )}
+              >
+                <div className={cn("p-2 rounded-lg", darkMode ? "bg-indigo-950 text-indigo-455" : "bg-slate-100 dark:bg-slate-850 text-slate-500")}>
+                  <Moon size={20} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold leading-none">Dark</span>
+                  <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-medium font-sans">Immersive slate system</span>
+                </div>
+              </button>
+            </div>
+          </div>
+          
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic text-center border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
+            Theme changes apply system-wide instantly.
+          </div>
+        </div>
+
+        {/* Version Info Section */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between min-h-[220px] md:col-span-2">
+          <div>
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Version Info</h4>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex justify-between sm:flex-col sm:justify-start gap-1 py-1.5 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800 text-xs pr-4">
+                <span className="font-bold text-slate-500 dark:text-slate-400">Node ID</span>
+                <span className="font-extrabold text-slate-900 dark:text-slate-100 sm:text-sm font-mono mt-0.5">AS-77LX-09</span>
               </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 text-xs">
-                <span className="font-bold text-slate-500">Core</span>
-                <span className="font-bold text-slate-900">v2.4.9-STABLE</span>
+              <div className="flex justify-between sm:flex-col sm:justify-start gap-1 py-1.5 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800 text-xs pr-4">
+                <span className="font-bold text-slate-500 dark:text-slate-400">Core Engine</span>
+                <span className="font-extrabold text-slate-900 dark:text-slate-100 sm:text-sm font-mono mt-0.5">v2.4.9-STABLE</span>
               </div>
-              <div className="flex justify-between items-center py-1.5 text-xs">
-                <span className="font-bold text-slate-500">Last Sync</span>
-                <span className="font-bold text-slate-900">Active connection</span>
+              <div className="flex justify-between sm:flex-col sm:justify-start gap-1 py-1.5 text-xs">
+                <span className="font-bold text-slate-500 dark:text-slate-400">Last Sync</span>
+                <span className="font-extrabold text-slate-900 dark:text-slate-100 sm:text-sm mt-0.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active connection
+                </span>
               </div>
             </div>
           </div>
-          <div className="text-[10px] text-slate-400 font-medium italic text-center border-t border-slate-100 pt-4 mt-4">
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic text-center border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
             System is up to date and running normally.
           </div>
         </div>
