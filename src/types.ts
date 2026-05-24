@@ -20,6 +20,7 @@ export interface Book {
     coverPath?: string;
   };
   addedAt: number;
+  duration?: number;
 }
 
 export interface User {

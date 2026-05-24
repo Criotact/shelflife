@@ -142,6 +142,7 @@ export default function App() {
             coverPath: api.getCoverPath(item.id),
           },
           addedAt: item.addedAt,
+          duration: item.media?.duration || 0,
         };
       });
       setBooks(transformedBooks);

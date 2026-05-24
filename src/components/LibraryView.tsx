@@ -2,15 +2,19 @@ import { useState, useEffect, useMemo } from "react";
 import { 
   Library as LibraryIcon, Database, RefreshCw, Layers, BookOpen, 
   Search, Filter, MoreVertical, CheckCircle2, AlertCircle, Sparkles,
-  ChevronRight, Calendar, User as UserIcon, Tag, ArrowUp, ArrowDown, Clock
+  ChevronRight, Calendar, User as UserIcon, Tag, ArrowUp, ArrowDown, Clock,
+  TrendingUp
 } from "lucide-react";
 import { Book, Library } from "../types";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, subDays } from "date-fns";
 import { cn } from "../lib/utils";
 import { api } from "../lib/api";
 import { BookDetailsModal } from "./BookDetailsModal";
 import { AnimatePresence } from "motion/react";
 import { CoverImage } from "./CoverImage";
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from "recharts";
 
 interface LibraryViewProps {
   books: Book[];
@@ -37,6 +41,30 @@ function formatDuration(seconds: number | undefined): string {
   return parts.join(" ");
 }
 
+const CustomChartTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white border border-slate-200 p-3 rounded-2xl shadow-xl max-w-[240px] font-sans text-xs">
+        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{data.dateStr}</p>
+        <p className="font-bold text-slate-900 truncate" title={data.bookTitle}>{data.bookTitle}</p>
+        <p className="text-slate-500 font-medium truncate mb-2">{data.author}</p>
+        <div className="border-t border-slate-100 pt-2 flex flex-col gap-1.5">
+          <div className="flex justify-between items-center gap-4">
+            <span className="text-slate-400 font-medium text-[10px] uppercase tracking-wider">Book Length:</span>
+            <span className="font-bold text-slate-700">{formatDuration(data.rawDuration)}</span>
+          </div>
+          <div className="flex justify-between items-center gap-4">
+            <span className="text-indigo-600 font-bold text-[10px] uppercase tracking-wider">Total Library:</span>
+            <span className="font-black text-indigo-600">{data.hours}h</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps) {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +79,37 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
   const [sortBy, setSortBy] = useState<'title' | 'author' | 'addedAt'>('addedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [libraryStats, setLibraryStats] = useState<{ totalSize: number; totalDuration: number } | null>(null);
+  const [chartTimeframe, setChartTimeframe] = useState<'7' | '30' | '365' | 'all'>('all');
+
+  const processedChartData = useMemo(() => {
+    if (!books || books.length === 0) return [];
+    
+    // Sort all books ascending by addedAt
+    const sorted = [...books]
+      .filter(b => b.addedAt)
+      .sort((a, b) => a.addedAt - b.addedAt);
+      
+    let runningSumSeconds = 0;
+    const allDataPoints = sorted.map(book => {
+      const bookDuration = book.duration || 0;
+      runningSumSeconds += bookDuration;
+      const hours = runningSumSeconds / 3600;
+      return {
+        timestamp: book.addedAt,
+        rawDuration: bookDuration,
+        hours: parseFloat(hours.toFixed(1)),
+        bookTitle: book.metadata?.title || "Unknown Title",
+        author: book.metadata?.authorName || "Unknown Author",
+        dateStr: format(new Date(book.addedAt), "MMM d, yyyy"),
+        shortDate: format(new Date(book.addedAt), "MM/dd"),
+      };
+    });
+
+    if (chartTimeframe === 'all') return allDataPoints;
+
+    const cutoff = subDays(new Date(), parseInt(chartTimeframe)).getTime();
+    return allDataPoints.filter(dp => dp.timestamp >= cutoff);
+  }, [books, chartTimeframe]);
 
   const handleHeaderClick = (field: 'title' | 'author' | 'addedAt') => {
     if (sortBy === field) {
@@ -91,6 +150,7 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
             coverPath: api.getCoverPath(item.id),
           },
           addedAt: item.addedAt || Date.now(),
+          duration: item.media?.duration || 0,
         };
       });
       setBooks(transformed);
@@ -208,24 +268,141 @@ export function LibraryView({ books: initialBooks, libraries }: LibraryViewProps
         </div>
       </div>
 
-      {/* Library Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600", bg: "bg-rose-50" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", stat.bg, stat.color)}>
-              <stat.icon size={18} />
-            </div>
-            <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
-              <p className="text-xl font-bold text-slate-900 leading-none">{stat.value}</p>
+      {/* Metrics and Library Growth Chart Container */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Metric Cards Stack */}
+        <div className="lg:col-span-1">
+          {/* MOBILE VIEW ONLY: Single Merged Metric Card */}
+          <div className="block lg:hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+              {[
+                { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
+                { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
+                { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600", bg: "bg-emerald-50" },
+                { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600", bg: "bg-rose-50" },
+              ].map((stat, idx) => (
+                <div key={stat.label} className={cn("flex items-center gap-3", idx % 2 === 1 && "pl-2 border-l border-slate-100")}>
+                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", stat.bg, stat.color)}>
+                    <stat.icon size={14} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">{stat.label}</p>
+                    <p className="text-xs font-bold text-slate-900 leading-none truncate">{stat.value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
+
+          {/* DESKTOP VIEW ONLY: Stacked Vertical Cards */}
+          <div className="hidden lg:flex flex-col gap-3 h-full">
+            {[
+              { label: "Total Indexed", value: books.length, icon: BookOpen, color: "text-indigo-600", bg: "bg-indigo-50" },
+              { label: "Library Size", value: formatBytes(libraryStats?.totalSize), icon: Database, color: "text-amber-600", bg: "bg-amber-50" },
+              { label: "Play Duration", value: formatDuration(libraryStats?.totalDuration), icon: Clock, color: "text-emerald-600", bg: "bg-emerald-50" },
+              { label: "Unique Authors", value: [...new Set(books.map(b => b.metadata?.authorName || "Unknown"))].length, icon: UserIcon, color: "text-rose-600", bg: "bg-rose-50" },
+            ].map((stat) => (
+              <div key={stat.label} className="bg-white rounded-2xl border border-slate-200 p-3.5 flex items-center gap-3.5 shadow-sm flex-grow justify-start">
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", stat.bg, stat.color)}>
+                  <stat.icon size={16} />
+                </div>
+                <div>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 leading-none">{stat.label}</p>
+                  <p className="text-base font-extrabold text-slate-900 leading-none mt-1">{stat.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Library Growth Chart Card (Occupies 3/4 columns on desktop) */}
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between h-[360px]">
+          <div className="flex items-center justify-between mb-4 px-2 shrink-0">
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                <TrendingUp size={14} className="text-indigo-600 animate-pulse" />
+                Library Growth
+              </h3>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
+                Cumulative playback hours indexed over time
+              </p>
+            </div>
+            <div className="flex bg-slate-100 p-0.5 rounded-lg">
+              {[
+                { label: '7D', value: '7' },
+                { label: '30D', value: '30' },
+                { label: '1Y', value: '365' },
+                { label: 'ALL', value: 'all' }
+              ].map((tf) => (
+                <button
+                  key={tf.value}
+                  onClick={() => setChartTimeframe(tf.value as any)}
+                  className={`px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all ${chartTimeframe === tf.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="h-[240px] w-full flex flex-col justify-end gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-pulse relative overflow-hidden select-none">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+                <div className="flex flex-col items-center gap-2">
+                  <Clock size={24} className="text-indigo-500 animate-spin" style={{ animationDuration: '3s' }} />
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Syncing growth trends...</p>
+                </div>
+              </div>
+            </div>
+          ) : processedChartData.length === 0 ? (
+            <div className="h-[240px] w-full flex flex-col items-center justify-center text-slate-400 gap-2 border border-dashed border-slate-200 rounded-xl bg-slate-50/20">
+              <AlertCircle size={20} className="text-slate-400" />
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No indexing history</p>
+                <p className="text-[8px] font-medium text-slate-400">Add assets to start visualizing library growth.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[240px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={processedChartData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="shortDate" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} 
+                    dy={5} 
+                    minTickGap={20}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} 
+                    tickFormatter={(v) => `${Math.round(v)}h`}
+                  />
+                  <Tooltip 
+                    content={<CustomChartTooltip />}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="hours" 
+                    stroke="#6366f1" 
+                    strokeWidth={2} 
+                    fillOpacity={1} 
+                    fill="url(#colorHours)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Repository Table */}
