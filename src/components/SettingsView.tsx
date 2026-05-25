@@ -1,6 +1,7 @@
 import { Power, ShieldCheck, Sun, Moon } from "lucide-react";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
+import packageJson from "../../package.json";
 
 interface SettingsViewProps {
   onDisconnect?: () => void;
@@ -53,8 +54,8 @@ export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: Se
                   <div className="space-y-1.5 mt-1 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl p-3">
                     {Object.entries(currentExtraHeaders).map(([key]) => (
                       <div key={key} className="flex items-center justify-between text-[11px] font-medium font-sans">
-                        <span className="font-semibold text-slate-600 dark:text-slate-405 font-mono break-all pr-2">{key}</span>
-                        <span className="text-slate-400 dark:text-slate-550 font-mono text-[9px] shrink-0">••••••••</span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-400 font-mono break-all pr-2">{key}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-mono text-[9px] shrink-0">••••••••</span>
                       </div>
                     ))}
                   </div>
@@ -66,7 +67,7 @@ export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: Se
           {onDisconnect && (
             <button 
               onClick={onDisconnect}
-              className="w-full py-2.5 bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-950/40 hover:bg-rose-100/70 dark:hover:bg-rose-950/40 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all shadow-sm mt-4 cursor-pointer active:scale-98"
+              className="w-full py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-500 border border-rose-100 dark:border-rose-950/30 hover:bg-rose-100/70 dark:hover:bg-rose-900/20 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all shadow-sm mt-4 cursor-pointer active:scale-98"
             >
               <Power size={12} />
               Disconnect Server
@@ -91,11 +92,11 @@ export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: Se
                 className={cn(
                   "flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all cursor-pointer gap-2",
                   !darkMode 
-                    ? "border-indigo-650 bg-indigo-50/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm shadow-indigo-100/30" 
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-white dark:bg-slate-950 text-slate-655 dark:text-slate-400"
+                    ? "border-indigo-600 bg-indigo-50/30 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm shadow-indigo-100/30" 
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400"
                 )}
               >
-                <div className={cn("p-2 rounded-lg", !darkMode ? "bg-indigo-100/80 text-indigo-600" : "bg-slate-100 dark:bg-slate-850 text-slate-500")}>
+                <div className={cn("p-2 rounded-lg", !darkMode ? "bg-indigo-100/80 text-indigo-600" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
                   <Sun size={20} />
                 </div>
                 <div className="flex flex-col">
@@ -110,10 +111,10 @@ export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: Se
                   "flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all cursor-pointer gap-2",
                   darkMode 
                     ? "border-indigo-600 dark:border-indigo-500 bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm" 
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-white dark:bg-slate-950 text-slate-655 dark:text-slate-400"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400"
                 )}
               >
-                <div className={cn("p-2 rounded-lg", darkMode ? "bg-indigo-950 text-indigo-455" : "bg-slate-100 dark:bg-slate-850 text-slate-500")}>
+                <div className={cn("p-2 rounded-lg", darkMode ? "bg-indigo-950 text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
                   <Moon size={20} />
                 </div>
                 <div className="flex flex-col">
@@ -123,41 +124,21 @@ export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: Se
               </button>
             </div>
           </div>
-          
-          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic text-center border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
-            Theme changes apply system-wide instantly.
-          </div>
         </div>
 
         {/* Version Info Section */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between min-h-[220px] md:col-span-2">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
           <div>
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
               <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Version Info</h4>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="flex justify-between sm:flex-col sm:justify-start gap-1 py-1.5 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800 text-xs pr-4">
-                <span className="font-bold text-slate-500 dark:text-slate-400">Node ID</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 sm:text-sm font-mono mt-0.5">AS-77LX-09</span>
-              </div>
-              <div className="flex justify-between sm:flex-col sm:justify-start gap-1 py-1.5 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-slate-800 text-xs pr-4">
-                <span className="font-bold text-slate-500 dark:text-slate-400">Core Engine</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 sm:text-sm font-mono mt-0.5">v2.4.9-STABLE</span>
-              </div>
-              <div className="flex justify-between sm:flex-col sm:justify-start gap-1 py-1.5 text-xs">
-                <span className="font-bold text-slate-500 dark:text-slate-400">Last Sync</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 sm:text-sm mt-0.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Active connection
-                </span>
-              </div>
+            <div className="space-y-1">
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Application Version</span>
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{packageJson.version}</span>
             </div>
           </div>
-          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic text-center border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
-            System is up to date and running normally.
-          </div>
+        </div>
         </div>
       </div>
-    </div>
   );
 }

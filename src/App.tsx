@@ -5,7 +5,6 @@ import {
   BarChart3, 
   Activity,
   Settings,
-  Search,
   Bell,
   User as UserIcon,
   Menu,
@@ -500,14 +499,6 @@ export default function App() {
             <div className="flex lg:hidden items-center gap-2 mr-2">
               <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">S</div>
               <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">Shelf<span className="text-indigo-600 dark:text-indigo-400">Life</span></h1>
-            </div>
-            <div className="hidden sm:flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-1.5 rounded-xl w-64 md:w-80 group focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-950/40 transition-all">
-              <Search size={14} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Query database..." 
-                className="bg-transparent border-none text-[11px] font-medium focus:ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-full outline-none text-slate-900 dark:text-slate-100"
-              />
             </div>
           </div>
 
