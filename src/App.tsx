@@ -588,7 +588,7 @@ export default function App() {
           </AnimatePresence>
         </section>
         {/* Bottom Navigation - Mobile Only */}
-        <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-2xl z-50 p-2 flex items-center justify-around">
+        <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-indigo-100/80 dark:bg-indigo-900/50 backdrop-blur-2xl border border-white/80 dark:border-indigo-950/80 rounded-3xl shadow-lg shadow-indigo-950/5 dark:shadow-2xl dark:shadow-black/40 z-50 p-2 flex items-center justify-around">
           {NAV_ITEMS.map(item => (
             <button
               key={item.id}
@@ -596,14 +596,14 @@ export default function App() {
               className={cn(
                 "flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-xl transition-all relative cursor-pointer",
                 activeTab === item.id 
-                  ? 'text-indigo-600 dark:text-indigo-400' 
-                  : 'text-slate-400 dark:text-slate-500'
+                  ? 'text-indigo-950 dark:text-white font-black' 
+                  : 'text-indigo-800/80 dark:text-indigo-200/85'
               )}
             >
               {activeTab === item.id && (
                 <motion.div 
                   layoutId="bottomNavTab"
-                  className="absolute inset-0 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl -z-10"
+                  className="absolute inset-0 bg-white/95 dark:bg-indigo-950/70 rounded-xl -z-10 shadow-sm"
                 />
               )}
               <item.icon size={20} />
