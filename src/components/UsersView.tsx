@@ -236,7 +236,7 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading, 
             </div>
             <div className="text-center">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Pick a listener</p>
-              <p className="text-[9px] font-medium">Select a user from the list to view their deep metrics and listening logs.</p>
+              <p className="text-xs font-medium mt-1">Select a user from the list to view their deep metrics and listening logs.</p>
             </div>
           </div>
         ) : (

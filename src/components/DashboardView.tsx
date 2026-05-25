@@ -502,7 +502,7 @@ export function DashboardView({
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <p className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt)} ago</p>
+                                  <p className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tight">{formatDistanceToNow(lastSession.startedAt).replace('about ', '')} ago</p>
                                 </div>
                               </div>
                             );
