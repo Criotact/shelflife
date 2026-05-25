@@ -2,6 +2,8 @@ import { Power, ShieldCheck, Sun, Moon } from "lucide-react";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
 import packageJson from "../../package.json";
+import { Capacitor } from "@capacitor/core";
+
 
 interface SettingsViewProps {
   onDisconnect?: () => void;
@@ -13,6 +15,8 @@ interface SettingsViewProps {
 export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: SettingsViewProps) {
   const config = api.getConfig();
   const isDirect = api.isDirectMode();
+  const isNative = Capacitor.isNativePlatform();
+
 
   const currentExtraHeaders = config?.extraHeaders ?? {};
   const hasExtraHeaders = Object.keys(currentExtraHeaders).length > 0;
@@ -38,9 +42,16 @@ export function SettingsView({ onDisconnect, darkMode = false, setDarkMode }: Se
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100 break-all">{config?.url || 'Relative Host'}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Routing State</span>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{isDirect ? 'Secure Client-to-API' : 'Encapsulated Express Proxy'}</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Connection Profile</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {isDirect 
+                    ? (isNative 
+                        ? 'Direct Client API (Android Native)' 
+                        : 'Forwarded Client (Browser Proxy)')
+                    : 'Default Host (Server Auth Proxy)'}
+                </span>
               </div>
+
               
               {hasExtraHeaders && (
                 <div className="space-y-1 pt-1">

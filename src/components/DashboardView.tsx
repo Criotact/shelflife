@@ -345,10 +345,10 @@ export function DashboardView({
                   <Play size={18} className="text-slate-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {activeSessions.length === 0 ? "Silence reigns" : "No results"}
                   </p>
-                  <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500">
+                  <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-1">
                     {activeSessions.length === 0 
                       ? "No active sessions at the moment." 
                       : "No active sessions matching your query."}
