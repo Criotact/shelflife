@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { TextZoom } from "@capacitor/text-zoom";
 import { 
   Users, 
   Library as LibraryIcon, 
@@ -198,6 +199,45 @@ export default function App() {
       setRefreshing(false);
     }
   }
+
+  // Sync OS Accessibility text zoom preferences with Root Font Size
+  useEffect(() => {
+    async function initTextZoom() {
+      try {
+        const { value } = await TextZoom.getPreferred();
+        const isMobile = window.innerWidth <= 768;
+        const baseSize = isMobile ? 18 : 16;
+        document.documentElement.style.fontSize = `${baseSize * value}px`;
+      } catch (err) {
+        console.warn("Capacitor TextZoom not supported or failed to load:", err);
+      }
+    }
+    
+    initTextZoom();
+
+    let watchId: any;
+    async function watchTextZoom() {
+      try {
+        const textZoomAny = TextZoom as any;
+        if (typeof textZoomAny.addListener === "function") {
+          watchId = await textZoomAny.addListener("textZoomDidChange", (data: any) => {
+            const isMobile = window.innerWidth <= 768;
+            const baseSize = isMobile ? 18 : 16;
+            document.documentElement.style.fontSize = `${baseSize * data.value}px`;
+          });
+        }
+      } catch (err) {
+        console.debug("Capacitor textZoomDidChange listener not supported:", err);
+      }
+    }
+    watchTextZoom();
+
+    return () => {
+      if (watchId && typeof watchId.remove === "function") {
+        watchId.remove();
+      }
+    };
+  }, []);
 
   // Handle Startup Connection Discovery
   useEffect(() => {
