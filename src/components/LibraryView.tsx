@@ -543,7 +543,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
               <thead>
                 <tr className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
                   <th 
-                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors"
+                    className="px-3 sm:px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors"
                     onClick={() => handleHeaderClick('title')}
                   >
                     <div className="flex items-center gap-1">
@@ -557,7 +557,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                     </div>
                   </th>
                   <th 
-                    className="px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors"
+                    className="px-3 sm:px-5 py-3 cursor-pointer select-none hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors"
                     onClick={() => handleHeaderClick('addedAt')}
                   >
                     <div className="flex items-center gap-1">
@@ -567,20 +567,20 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                       )}
                     </div>
                   </th>
-                  <th className="px-5 py-3 text-right select-none">Actions</th>
+                  <th className="px-3 sm:px-5 py-3 text-right select-none">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="px-5 py-12 text-center">
+                    <td colSpan={3} className="px-3 sm:px-5 py-12 text-center">
                       <RefreshCw size={20} className="animate-spin text-indigo-600 dark:text-indigo-400 mx-auto mb-2" />
                       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Syncing repository contents...</p>
                     </td>
                   </tr>
                 ) : paginatedBooks.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-5 py-12 text-center">
+                    <td colSpan={3} className="px-3 sm:px-5 py-12 text-center">
                       <AlertCircle size={20} className="text-slate-400 dark:text-slate-500 mx-auto mb-2" />
                       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">No assets match your search</p>
                     </td>
@@ -595,7 +595,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                       }}
                       className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors cursor-pointer"
                     >
-                      <td className="px-5 py-3">
+                      <td className="px-3 sm:px-5 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-300 dark:text-slate-600 relative">
                             <CoverImage
@@ -610,10 +610,10 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-3 sm:px-5 py-3">
                         <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{formatDistanceToNow(book.addedAt)} ago</p>
                       </td>
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-3 sm:px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button 
                             onClick={(e) => {
