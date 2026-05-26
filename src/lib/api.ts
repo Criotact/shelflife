@@ -41,36 +41,47 @@ class ApiClient {
         isDirect: true,
         extraHeaders,
       };
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      if (!isNative) {
+        // Web: routes through /gateway
+        headers["X-Target-URL"] = this.config.url;
+        if (Object.keys(extraHeaders).length > 0) {
+          headers["X-ABS-Extra-Headers"] = JSON.stringify(extraHeaders);
+        }
+      } else {
+        // Native: direct
+        Object.assign(headers, extraHeaders);
+      }
+
       this.client = axios.create({
-        baseURL: isNative ? `${this.config.url}/api` : "/api/abs",
-        headers: {
-          ...(isNative
-            // Native: send extra headers (e.g. CF-Access-*) directly to ABS
-            ? extraHeaders
-            // Web proxy: send extra headers via envelope header for server to unpack
-            : {
-                "X-ABS-URL": this.config.url,
-                ...(Object.keys(extraHeaders).length > 0
-                  ? { "X-ABS-Extra-Headers": JSON.stringify(extraHeaders) }
-                  : {}),
-              }),
-          Authorization: `Bearer ${token}`,
-        },
+        baseURL: isNative ? `${this.config.url}/api` : "/gateway/api",
+        headers,
       });
     } else {
-      // Proxy Mode Fallback (reads relative from server hosting the web app)
+      // Proxy Mode Fallback (reads relative from server env via /gateway)
       this.config = {
         url: isNative ? "http://localhost" : window.location.origin,
         token: "",
         isDirect: false,
         extraHeaders,
       };
+
+      const headers: Record<string, string> = {};
+      if (!isNative) {
+        if (Object.keys(extraHeaders).length > 0) {
+          headers["X-ABS-Extra-Headers"] = JSON.stringify(extraHeaders);
+        }
+      } else {
+        Object.assign(headers, extraHeaders);
+      }
+
       this.client = axios.create({
-        baseURL: isNative ? "http://localhost/api" : "/api/abs",
-        headers:
-          Object.keys(extraHeaders).length > 0
-            ? { "X-ABS-Extra-Headers": JSON.stringify(extraHeaders) }
-            : {},
+        baseURL: isNative ? "http://localhost/api" : "/gateway/api",
+        headers,
       });
     }
 
@@ -132,32 +143,35 @@ class ApiClient {
     if (isNative && this.config?.url) {
       return `${this.config.url}/api/items/${itemId}/cover`;
     }
-    if (this.config?.isDirect && this.config.url) {
-      const encodedUrl = encodeURIComponent(this.config.url);
-      return `/metadata/items/${itemId}/cover.jpg?absUrl=${encodedUrl}`;
-    }
-    return `/metadata/items/${itemId}/cover.jpg`;
+    return `/gateway/api/items/${itemId}/cover`;
   }
 
   // Fetch cover as secure blob URL with proper credentials in headers
   public async fetchCoverAsBlob(itemId: string): Promise<string | null> {
+    const isNative = Capacitor.isNativePlatform();
     const coverPath = this.getCoverPath(itemId);
     try {
-      const isNative = Capacitor.isNativePlatform();
       const headers: Record<string, string> = {};
-      if (this.config?.token) {
-        headers["Authorization"] = `Bearer ${this.config.token}`;
-      }
-      if (this.config?.isDirect && this.config.url && !isNative) {
-        headers["X-ABS-URL"] = this.config.url;
-      }
-      // Include extra headers: directly for native, via envelope for web
-      const extraHeaders = this.config?.extraHeaders || {};
-      if (Object.keys(extraHeaders).length > 0) {
-        if (isNative) {
-          Object.assign(headers, extraHeaders);
-        } else {
+      if (!isNative) {
+        // Web: through gateway
+        if (this.config?.isDirect && this.config.url) {
+          headers["X-Target-URL"] = this.config.url;
+          if (this.config.token) {
+            headers["Authorization"] = `Bearer ${this.config.token}`;
+          }
+        }
+        const extraHeaders = this.config?.extraHeaders || {};
+        if (Object.keys(extraHeaders).length > 0) {
           headers["X-ABS-Extra-Headers"] = JSON.stringify(extraHeaders);
+        }
+      } else {
+        // Native: direct request
+        if (this.config?.token) {
+          headers["Authorization"] = `Bearer ${this.config.token}`;
+        }
+        const extraHeaders = this.config?.extraHeaders || {};
+        if (Object.keys(extraHeaders).length > 0) {
+          Object.assign(headers, extraHeaders);
         }
       }
       const response = await fetch(coverPath, { headers });
@@ -190,11 +204,19 @@ class ApiClient {
           return { ok: false, error: "No URL configured" };
         }
       } else {
-        // Both modes call the Express backend's health route via proxy
-        const response = await this.client.get("/health");
-        if (response.data?.error) {
-          return { ok: false, error: `Could not connect to host at ${this.config?.url || 'Audiobookshelf'}. Error: ${response.data.error}` };
+        // Web: ping the target via the gateway
+        const headers: Record<string, string> = {};
+        if (this.config?.isDirect && this.config.url) {
+          headers["X-Target-URL"] = this.config.url;
         }
+        const extraHeaders = this.config?.extraHeaders || {};
+        if (Object.keys(extraHeaders).length > 0) {
+          headers["X-ABS-Extra-Headers"] = JSON.stringify(extraHeaders);
+        }
+        await axios.get("/gateway/ping", {
+          timeout: 5000,
+          headers,
+        });
       }
 
       // Test credentials/token by loading libraries
@@ -306,48 +328,42 @@ class ApiClient {
     }));
   }
 
-  // Recent items - aggregate client-side if in direct mode
+  // Recent items - always aggregate client-side
   public async getRecentItems(): Promise<{ results: any[]; totalBooks: number }> {
     if (!this.client) throw new Error("Client not initialized");
 
-    if (this.config?.isDirect) {
-      try {
-        const libData = await this.getLibraries();
-        const libraries = libData?.libraries || libData || [];
-        
-        if (libraries.length === 0) {
-          return { results: [], totalBooks: 0 };
-        }
-
-        const recentPromises = libraries.map((lib: any) =>
-          this.client!.get(`/libraries/${lib.id}/items?limit=10&sort=addedAt&desc=1`)
-            .then((res) => ({
-              results: res.data.results || [],
-              total: res.data.total || 0,
-            }))
-            .catch((err) => {
-              console.error(`Failed to load library items for ${lib.id}:`, err);
-              return { results: [], total: 0 };
-            })
-        );
-
-        const results = await Promise.all(recentPromises);
-        const totalBooks = results.reduce((acc, r) => acc + r.total, 0);
-        const flattened = results.flatMap((r) => r.results);
-        
-        const sorted = flattened.sort((a: any, b: any) => b.addedAt - a.addedAt);
-        return {
-          results: sorted.slice(0, 10),
-          totalBooks,
-        };
-      } catch (err) {
-        console.error("Failed client-side aggregation of recent items:", err);
-        throw err;
+    try {
+      const libData = await this.getLibraries();
+      const libraries = libData?.libraries || libData || [];
+      
+      if (libraries.length === 0) {
+        return { results: [], totalBooks: 0 };
       }
-    } else {
-      // Proxy Mode calls the Express aggregation endpoint directly
-      const response = await this.client.get("/recent");
-      return response.data;
+
+      const recentPromises = libraries.map((lib: any) =>
+        this.client!.get(`/libraries/${lib.id}/items?limit=10&sort=addedAt&desc=1`)
+          .then((res) => ({
+            results: res.data.results || [],
+            total: res.data.total || 0,
+          }))
+          .catch((err) => {
+            console.error(`Failed to load library items for ${lib.id}:`, err);
+            return { results: [], total: 0 };
+          })
+      );
+
+      const results = await Promise.all(recentPromises);
+      const totalBooks = results.reduce((acc, r) => acc + r.total, 0);
+      const flattened = results.flatMap((r) => r.results);
+      
+      const sorted = flattened.sort((a: any, b: any) => b.addedAt - a.addedAt);
+      return {
+        results: sorted.slice(0, 10),
+        totalBooks,
+      };
+    } catch (err) {
+      console.error("Failed client-side aggregation of recent items:", err);
+      throw err;
     }
   }
 
@@ -358,18 +374,10 @@ class ApiClient {
   }
 
   public async lookupChapters(asin: string, region?: string) {
-    if (this.config?.isDirect) {
-      const params: Record<string, string> = {};
-      if (region) params.region = region;
-      const response = await axios.get(`https://api.audnex.us/books/${asin}/chapters`, { params });
-      return response.data;
-    } else {
-      if (!this.client) throw new Error("Client not initialized");
-      const params: Record<string, string> = { asin };
-      if (region) params.region = region;
-      const response = await this.client.get("/chapters/lookup", { params });
-      return response.data;
-    }
+    const params: Record<string, string> = {};
+    if (region) params.region = region;
+    const response = await axios.get(`https://api.audnex.us/books/${asin}/chapters`, { params });
+    return response.data;
   }
 
   public async updateChapters(itemId: string, chapters: any[]) {

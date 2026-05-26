@@ -82,7 +82,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
         }
 
         const isNative = Capacitor.isNativePlatform();
-        const loginUrl = isNative ? `${formattedUrl}/login` : `/api/abs/login`;
+        const loginUrl = isNative ? `${formattedUrl}/login` : `/gateway/login`;
 
         const loginRes = await axios.post(
           loginUrl,
@@ -90,7 +90,7 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
           { 
             headers: { 
               "Content-Type": "application/json",
-              ...(isNative ? {} : { "X-ABS-URL": formattedUrl }),
+              ...(isNative ? {} : { "X-Target-URL": formattedUrl }),
               // Forward extra headers so CF-protected servers accept login
               ...(parsedExtraHeaders && !isNative
                 ? { "X-ABS-Extra-Headers": JSON.stringify(parsedExtraHeaders) }
