@@ -39,12 +39,12 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK with Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: wrapper
-          build-root-directory: android
-          arguments: assembleDebug
+
+      - name: Build Debug APK with Gradle
+        run: ./gradlew assembleDebug
+        working-directory: android
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
