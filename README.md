@@ -130,11 +130,12 @@ If you prefer to compile manually, follow these steps:
 
 > [!WARNING]
 >**Best Practices for Secure Deployment:**
-> * ShelfLife acts as a proxy server between your browser and the ABS instance. It does not implement any authenification or user management on its own. Never expose the web server directly to the internet or your ABS instance and proxy endpoint will get abused. Always put the server behind a secure reverse proxy with authentication (e.g. Cloudflare Access, Authelia, or Authelia Basic Auth) or VPN (Wireguard, Tailscale) or just host it in your local network.
+> * ShelfLife acts as a proxy server between your browser and the ABS instance. It does not implement any authentication or user management on its own. Never expose the web server directly to the internet or your ABS instance and proxy endpoint will get abused. Always put the server behind a secure reverse proxy with authentication (e.g. Cloudflare Access, Authelia, or Authelia Basic Auth) or VPN (Wireguard, Tailscale) or just host it in your local network.
 > * For Android users, there is no central backend or proxy server required, as the app connects directly to the ABS instance. 
 >
-> **In-Browser Login (Testing & Development Only)**
-> 
-> The in-browser login screen stores your server credentials and authentication headers in the browser's `localStorage`. This is intended for development and testing only.
-> For standard server deployments, configure `ABS_URL` and `ABS_TOKEN` directly inside your server's `.env` file, which hides credentials completely from the web user. On Android, the credentials are stored securely on your device only.
+>**In-Browser Login (Testing & Development Only)**
+>It is strongly advised to configure the connection using the server environment file. Sending login credentials directly to the browser is recommended only for testing and development, as it introduces several security risks:
+> * If you host the ShelfLife proxy server over plain `http://`, all dynamic target URLs, API tokens, user login passwords, and Cloudflare Access headers configured on the connection screen will be transmitted in clear text across the network. 
+> * The in-browser login screen stores your server credentials and authentication headers in the browser's `localStorage`. This is intended for development and testing only.
+> * For standard server deployments, it is recommended to configure `ABS_URL` and `ABS_TOKEN` directly inside your server's `.env` file, which hides credentials completely from the web user. On Android, the credentials are stored securely on your device only.
 
