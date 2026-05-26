@@ -1,0 +1,9 @@
+node_modules
+dist
+android
+build-android.sh
+.git
+.gitignore
+.env
+.env.local
+README.md

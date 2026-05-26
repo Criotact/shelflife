@@ -1,0 +1,15 @@
+services:
+  shelflife:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shelflife
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - ABS_URL=${ABS_URL}
+      - ABS_TOKEN=${ABS_TOKEN}
+      - ABS_EXTRA_HEADERS=${ABS_EXTRA_HEADERS}
+      - APP_URL=${APP_URL}
