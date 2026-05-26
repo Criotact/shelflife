@@ -12,10 +12,10 @@ def getAppVersion() {
 }
 
 android {
-    namespace = "com.example.shelflife"
+    namespace = "org.shelflife.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.example.shelflife"
+        applicationId "org.shelflife.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
