@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { 
   Users, Search, Filter, ChevronRight, Clock, Calendar, BarChart3, 
   History, User as UserIcon, TrendingUp, Music, LayoutGrid, List, BookOpen
@@ -8,9 +8,12 @@ import {
 } from "recharts";
 import { format, formatDistanceToNow, subDays } from "date-fns";
 import { User, Session, UserStats, Book } from "../types";
-import { ActivityHeatmap } from "./ActivityHeatmap";
 import { formatDuration, cn, formatTotalTime } from "../lib/utils";
 import { CoverImage } from "./CoverImage";
+
+const ActivityHeatmap = lazy(() =>
+  import("./ActivityHeatmap").then((module) => ({ default: module.ActivityHeatmap }))
+);
 
 interface UsersViewProps {
   users: User[];
@@ -370,12 +373,19 @@ export function UsersView({ users, sessions, userStats, books, sessionsLoading, 
             </div>
 
             {/* Heatmap */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
-              <ActivityHeatmap 
-                title="Yearly Listening Intensity"
-                data={selectedUserStats?.activity || {}}
-                isDark={isDark}
-              />
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 min-h-[180px]">
+              <Suspense fallback={
+                <div className="h-[130px] w-full flex flex-col justify-center items-center text-slate-400 dark:text-slate-500 gap-2.5">
+                  <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Loading Playback Heatmap...</span>
+                </div>
+              }>
+                <ActivityHeatmap 
+                  title="Yearly Listening Intensity"
+                  data={selectedUserStats?.activity || {}}
+                  isDark={isDark}
+                />
+              </Suspense>
             </div>
 
             {/* Session Logs */}
