@@ -32,6 +32,8 @@ import { SettingsView } from "./components/SettingsView";
 import { ConnectionScreen } from "./components/ConnectionScreen";
 import { api } from "./lib/api";
 import { cn } from "./lib/utils";
+import logoLight from "../assets/icon.svg";
+import logoDark from "../assets/icon-dark.svg";
 
 const NAV_ITEMS = [
   { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
@@ -449,7 +451,7 @@ export default function App() {
   }
 
   if (isConfigured === false) {
-    return <ConnectionScreen onSuccess={() => {
+    return <ConnectionScreen isDark={darkMode} onSuccess={() => {
       setIsConfigured(true);
       fetchData(true);
     }} />;
@@ -507,7 +509,14 @@ export default function App() {
       <aside className="hidden lg:flex h-screen border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-col sticky top-0 z-50 shrink-0 w-[240px]">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold italic shadow-md shadow-indigo-100 ring-2 ring-indigo-50">S</div>
+            <motion.img 
+              src={darkMode ? logoDark : logoLight} 
+              alt="ShelfLife Logo" 
+              className="w-8 h-8 object-contain cursor-pointer"
+              whileHover={{ scale: 1.08, rotate: 3 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            />
             <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">Shelf<span className="text-indigo-600 dark:text-indigo-400">Life</span></h1>
           </div>
           
@@ -537,7 +546,14 @@ export default function App() {
         <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex lg:hidden items-center gap-2 mr-2">
-              <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">S</div>
+              <motion.img 
+                src={darkMode ? logoDark : logoLight} 
+                alt="ShelfLife Logo" 
+                className="w-7 h-7 object-contain cursor-pointer"
+                whileHover={{ scale: 1.08, rotate: 3 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              />
               <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">Shelf<span className="text-indigo-600 dark:text-indigo-400">Life</span></h1>
             </div>
           </div>

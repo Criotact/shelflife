@@ -16,12 +16,15 @@ import { motion, AnimatePresence } from "motion/react";
 import axios from "axios";
 import { api } from "../lib/api";
 import { Capacitor } from "@capacitor/core";
+import logoLight from "../../assets/icon.svg";
+import logoDark from "../../assets/icon-dark.svg";
 
 interface ConnectionScreenProps {
   onSuccess: () => void;
+  isDark?: boolean;
 }
 
-export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
+export function ConnectionScreen({ onSuccess, isDark = false }: ConnectionScreenProps) {
   const [url, setUrl] = useState("");
   const [authMethod, setAuthMethod] = useState<"credentials" | "token">("credentials");
   const [username, setUsername] = useState("");
@@ -161,15 +164,20 @@ export function ConnectionScreen({ onSuccess }: ConnectionScreenProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 p-8 sm:p-10 relative overflow-hidden"
+        className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 pt-5 pb-8 px-8 sm:pt-6 sm:pb-10 sm:px-10 relative overflow-hidden"
       >
         {/* Sleek aesthetic background accent */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 dark:bg-indigo-950/20 rounded-bl-full -z-10" />
         
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-extrabold italic shadow-lg shadow-indigo-100 dark:shadow-none ring-4 ring-indigo-50 dark:ring-indigo-950/40 mx-auto mb-4">
-            S
-          </div>
+          <motion.img 
+            src={isDark ? logoDark : logoLight} 
+            alt="ShelfLife Logo" 
+            className="w-40 h-40 object-contain mx-auto mt-0 mb-1 cursor-pointer"
+            whileHover={{ scale: 1.05, rotate: 3 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          />
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
             Shelf<span className="text-indigo-600 dark:text-indigo-400">Life</span>
           </h2>
