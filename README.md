@@ -11,6 +11,14 @@
     <img src="https://img.shields.io/badge/Capacitor-v8.3-119EFF?style=for-the-badge&logo=capacitor&logoColor=white" alt="Capacitor" />
     <img src="https://img.shields.io/badge/Android-Native-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
   </p>
+  
+  <p align="center">
+    <a href="#-key-features">Key Features</a> •
+    <a href="#️-quick-start-local-run">Quick Start (Local)</a> •
+    <a href="#-docker-deployment">Docker Deployment</a> •
+    <a href="#-mobile-deployment-android-native">Mobile Deployment</a> •
+    <a href="#-security-considerations">Security Considerations</a>
+  </p>
 </div>
 
 ---
@@ -18,6 +26,23 @@
 **ShelfLife** is a companion dashboard and mobile app designed for [Audiobookshelf](https://www.audiobookshelf.org/), a self-hosted audiobook and podcast server. 
 
 ShelfLife delivers real-time listening logs, advanced stats, library audits, ASIN matching tools, and deep active-session tracking. Think of Tautulli for Audiobookshelf.
+
+<details>
+  <summary><strong>📸 Click to view Dashboard Previews</strong></summary>
+  <br />
+  
+  <h4>🖥️ Desktop Dashboard</h4>
+  <img src="assets/screenshots/desktop-dashboard.png" alt="ShelfLife Desktop Dashboard" width="100%" style="border-radius: 8px; margin-bottom: 16px;" />
+  
+  <h4>📱 Mobile Dashboard</h4>
+  <img src="assets/screenshots/mobile-dashboard.png" alt="ShelfLife Mobile Dashboard" width="320" style="border-radius: 8px; margin-bottom: 16px;" />
+  
+  <h4>🔗 Other Screenshots</h4>
+  <ul>
+    <li><strong>Library Auditing:</strong> <a href="assets/screenshots/desktop-library.png">Desktop View</a> | <a href="assets/screenshots/mobile-library.png">Mobile View</a></li>
+    <li><strong>Listener & Active Sessions:</strong> <a href="assets/screenshots/desktop-user.png">Desktop View</a> | <a href="assets/screenshots/mobile-users.png">Mobile View</a></li>
+  </ul>
+</details>
 
 ## 🌟 Key Features
 
@@ -92,7 +117,43 @@ To host ShelfLife in production, run:
 npm run start
 ```
 
+---
 
+## 🐳 Docker Deployment
+
+ShelfLife is fully containerized and can be easily deployed using Docker or Docker Compose. This is the recommended method for hosting ShelfLife on a home server or NAS.
+
+### Option 1: Docker Compose (Recommended)
+
+You can configure your environment variables in one of two ways:
+*   **Via `.env` file (Recommended):** Create a `.env` file in the same directory as `docker-compose.yml` and populate it (see [Configure Environment Variables](#️-configure-environment-variables)). Docker Compose will automatically read it.
+*   **Directly in `docker-compose.yml`:** Open `docker-compose.yml` and replace the `${VARIABLE}` placeholders with your actual values under the `environment:` block (e.g., `ABS_URL=https://audiobookshelf.example.com`).
+
+Once configured, run:
+
+1. Start the container in detached mode:
+   ```bash
+   docker compose up -d
+   ```
+2. The dashboard will be accessible at `http://localhost:3000` (or your configured `PORT`).
+
+### Option 2: Docker CLI
+
+1. Build the production Docker image locally:
+   ```bash
+   docker build -t shelflife .
+   ```
+2. Start the container, loading your environmental configuration:
+   ```bash
+   docker run -d \
+     -p 3000:3000 \
+     --env-file .env \
+     --name shelflife \
+     --restart unless-stopped \
+     shelflife
+   ```
+
+---
 
 ## 📱 Mobile Deployment (Android Native)
 
