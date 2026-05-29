@@ -292,7 +292,7 @@ export function BookDetailsModal({ book, initialTab = "details", onClose, onMatc
         </div>
 
         {/* Dynamic Tab Bar */}
-        <div className="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 px-5 py-1 gap-1">
+        <div className="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 px-3 sm:px-5 py-1 gap-0.5 sm:gap-1">
           {[
             { id: "details", label: "Details", icon: Info },
             { id: "match", label: "Match", icon: Sparkles },
@@ -308,7 +308,7 @@ export function BookDetailsModal({ book, initialTab = "details", onClose, onMatc
                   setMatchError(null);
                 }}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded-xl relative cursor-pointer",
+                  "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all rounded-xl relative cursor-pointer",
                   isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/30"
                 )}
               >
@@ -319,11 +319,11 @@ export function BookDetailsModal({ book, initialTab = "details", onClose, onMatc
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                <Icon size={13} />
+                <Icon size={12} className="sm:w-[13px] sm:h-[13px]" />
                 {tab.label}
                 {tab.id === "chapters" && chapters.length > 0 && (
                   <span className={cn(
-                    "ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full",
+                    "ml-0.5 sm:ml-1 text-[8px] sm:text-[9px] font-black px-1 sm:px-1.5 py-0.25 sm:py-0.5 rounded-full",
                     isActive ? "bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400" : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}>
                     {chapters.length}
