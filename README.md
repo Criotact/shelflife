@@ -33,18 +33,16 @@ ShelfLife delivers real-time listening logs, advanced stats, library audits, ASI
 <details>
   <summary><strong>📸 Click to view Dashboard Previews</strong></summary>
   <br />
-  
-  <h4>🖥️ Desktop Dashboard</h4>
-  <img src="assets/screenshots/desktop-dashboard.png" alt="ShelfLife Desktop Dashboard" width="100%" style="border-radius: 8px; margin-bottom: 16px;" />
-  
-  <h4>📱 Mobile Dashboard</h4>
-  <img src="assets/screenshots/mobile-dashboard.png" alt="ShelfLife Mobile Dashboard" width="320" style="border-radius: 8px; margin-bottom: 16px;" />
-  
-  <h4>🔗 Other Screenshots</h4>
-  <ul>
-    <li><strong>Library Auditing:</strong> <a href="assets/screenshots/desktop-library.png">Desktop View</a> | <a href="assets/screenshots/mobile-library.png">Mobile View</a></li>
-    <li><strong>Listener & Active Sessions:</strong> <a href="assets/screenshots/desktop-user.png">Desktop View</a> | <a href="assets/screenshots/mobile-users.png">Mobile View</a></li>
-  </ul>
+
+  <h4>🖥️ Desktop</h4>
+  <img src="assets/screenshots/desktop-dashboard.png" alt="ShelfLife Desktop Dashboard" width="100%" style="border-radius: 8px; margin-bottom: 12px;" />
+  <img src="assets/screenshots/desktop-library.png" alt="ShelfLife Desktop Library" width="100%" style="border-radius: 8px; margin-bottom: 12px;" />
+  <img src="assets/screenshots/desktop-user.png" alt="ShelfLife Desktop User" width="100%" style="border-radius: 8px; margin-bottom: 16px;" />
+
+  <h4>📱 Mobile</h4>
+  <img src="assets/screenshots/mobile-dashboard.png" alt="ShelfLife Mobile Dashboard" width="280" style="border-radius: 8px; margin-right: 12px;" />
+  <img src="assets/screenshots/mobile-library.png" alt="ShelfLife Mobile Library" width="280" style="border-radius: 8px; margin-right: 12px;" />
+  <img src="assets/screenshots/mobile-users.png" alt="ShelfLife Mobile Users" width="280" style="border-radius: 8px;" />
 </details>
 
 ## 🌟 Key Features
