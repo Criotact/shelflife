@@ -7,3 +7,5 @@ build-android.sh
 .env
 .env.local
 README.md
+assets/screenshots/
+
