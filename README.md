@@ -4,6 +4,9 @@
   <p><strong>A feature-rich companion dashboard for Audiobookshelf.</strong></p>
   
   <p>
+    <a href="https://github.com/hschaefer/shelflife/releases/latest">
+      <img src="https://img.shields.io/github/v/release/hschaefer/shelflife?style=for-the-badge&color=indigo&logo=github&logoColor=white" alt="Latest Release" />
+    </a>
     <img src="https://img.shields.io/badge/React-19.0-blue?style=for-the-badge&logo=react&logoColor=white" alt="React" />
     <img src="https://img.shields.io/badge/TypeScript-5.8-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
     <img src="https://img.shields.io/badge/Tailwind_CSS-v4.0-38BDF8?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
@@ -26,8 +29,6 @@
 **ShelfLife** is a companion dashboard and mobile app designed for [Audiobookshelf](https://www.audiobookshelf.org/), a self-hosted audiobook and podcast server. 
 
 ShelfLife delivers real-time listening logs, advanced stats, library audits, ASIN matching tools, and deep active-session tracking. Think of Tautulli for Audiobookshelf.
-
-
 
 <details>
   <summary><strong>📸 Click to view Dashboard Previews</strong></summary>
