@@ -188,11 +188,11 @@ export function ConnectionScreen({ onSuccess, isDark = false }: ConnectionScreen
 
         {/* Browser security warning — hidden on native/Android */}
         {!isNative && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-amber-200 dark:border-amber-900/35 bg-amber-50 dark:bg-amber-955/20 px-4 py-3">
-            <ShieldAlert size={15} className="shrink-0 text-amber-650 dark:text-amber-400 mt-0.5" />
-            <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300 font-medium">
-              <span className="font-bold">Testing only.</span>{" "}
-              Browser login stores credentials and headers in the browser, which is insecure. For production use, pass <code className="bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 px-1 rounded text-[10px] font-mono">ABS_URL</code> and <code className="bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 px-1 rounded text-[10px] font-mono">ABS_TOKEN</code> via your environment.
+          <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-amber-100 dark:border-amber-950/20 bg-amber-50/70 dark:bg-amber-950/15 px-4 py-3">
+            <ShieldAlert size={15} className="shrink-0 text-amber-600 dark:text-amber-500/60 mt-0.5" />
+            <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-400/70 font-medium">
+              <span className="font-bold text-amber-900 dark:text-amber-300/80">Testing only.</span>{" "}
+              Browser login stores credentials and headers in the browser, which is insecure. For production use, pass <code className="bg-amber-100/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300/70 px-1 rounded text-[10px] font-mono">ABS_URL</code> and <code className="bg-amber-100/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300/70 px-1 rounded text-[10px] font-mono">ABS_TOKEN</code> via your environment.
             </p>
           </div>
         )}
