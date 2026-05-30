@@ -42,9 +42,24 @@ function formatDuration(seconds: number | undefined): string {
   return parts.join(" ");
 }
 
+const getTickFormatter = (timeframe: string) => {
+  return (timestamp: number) => {
+    try {
+      const date = new Date(timestamp);
+      if (timeframe === '7' || timeframe === '30') {
+        return format(date, "MMM d");
+      }
+      return format(date, "MMM yy");
+    } catch (e) {
+      return "";
+    }
+  };
+};
+
 const CustomChartTooltip = ({ active, payload, isDark }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const isBoundary = data.isBoundary;
     return (
       <div className={cn(
         "border p-3 rounded-2xl shadow-xl max-w-[240px] font-sans text-xs",
@@ -54,12 +69,16 @@ const CustomChartTooltip = ({ active, payload, isDark }: any) => {
       )}>
         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{data.dateStr}</p>
         <p className={cn("font-bold truncate", isDark ? "text-slate-100" : "text-slate-900")} title={data.bookTitle}>{data.bookTitle}</p>
-        <p className="text-slate-500 dark:text-slate-450 font-medium truncate mb-2">{data.author}</p>
+        {!isBoundary && data.author && (
+          <p className="text-slate-500 dark:text-slate-400 font-medium truncate mb-2">{data.author}</p>
+        )}
         <div className="border-t border-slate-100 dark:border-slate-800 pt-2 flex flex-col gap-1.5">
-          <div className="flex justify-between items-center gap-4">
-            <span className="text-slate-400 dark:text-slate-500 font-medium text-[10px] uppercase tracking-wider">Book Length:</span>
-            <span className={cn("font-bold", isDark ? "text-slate-300" : "text-slate-700")}>{formatDuration(data.rawDuration)}</span>
-          </div>
+          {!isBoundary && (
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-slate-400 dark:text-slate-500 font-medium text-[10px] uppercase tracking-wider">Book Length:</span>
+              <span className={cn("font-bold", isDark ? "text-slate-300" : "text-slate-700")}>{formatDuration(data.rawDuration)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center gap-4">
             <span className="text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">Total Library:</span>
             <span className="font-black text-indigo-650 dark:text-indigo-400">{data.hours}h</span>
@@ -95,8 +114,10 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
   const [libraryStats, setLibraryStats] = useState<{ totalSize: number; totalDuration: number } | null>(null);
   const [chartTimeframe, setChartTimeframe] = useState<'7' | '30' | '365' | 'all'>('all');
 
-  const processedChartData = useMemo(() => {
-    if (!books || books.length === 0) return [];
+  const { chartData, minTime, maxTime } = useMemo(() => {
+    if (!books || books.length === 0) {
+      return { chartData: [], minTime: 0, maxTime: 0 };
+    }
     
     // Sort all books ascending by addedAt
     const sorted = [...books]
@@ -114,15 +135,64 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
         hours: parseFloat(hours.toFixed(1)),
         bookTitle: book.metadata?.title || "Unknown Title",
         author: book.metadata?.authorName || "Unknown Author",
+        isBoundary: false,
         dateStr: format(new Date(book.addedAt), "MMM d, yyyy"),
         shortDate: format(new Date(book.addedAt), "MM/dd"),
       };
     });
 
-    if (chartTimeframe === 'all') return allDataPoints;
+    const now = Date.now();
+    let minTime = sorted[0]?.addedAt || now;
+    const maxTime = now;
 
-    const cutoff = subDays(new Date(), parseInt(chartTimeframe)).getTime();
-    return allDataPoints.filter(dp => dp.timestamp >= cutoff);
+    if (chartTimeframe !== 'all') {
+      minTime = subDays(new Date(), parseInt(chartTimeframe)).getTime();
+    }
+
+    // Filter points that are within [minTime, maxTime]
+    const filteredPoints = allDataPoints.filter(dp => dp.timestamp >= minTime);
+
+    // Calculate the cumulative hours before minTime
+    let initialHours = 0;
+    const pointsBefore = allDataPoints.filter(dp => dp.timestamp < minTime);
+    if (pointsBefore.length > 0) {
+      initialHours = pointsBefore[pointsBefore.length - 1].hours;
+    }
+
+    const chartPoints = [];
+
+    // Inject the start point at minTime
+    chartPoints.push({
+      timestamp: minTime,
+      rawDuration: 0,
+      hours: initialHours,
+      bookTitle: "Period Start",
+      author: "",
+      isBoundary: true,
+      dateStr: format(new Date(minTime), "MMM d, yyyy"),
+      shortDate: format(new Date(minTime), "MM/dd"),
+    });
+
+    // Add all actual additions within the timeframe
+    chartPoints.push(...filteredPoints);
+
+    // Inject the end point at maxTime (now)
+    const finalHours = filteredPoints.length > 0 
+      ? filteredPoints[filteredPoints.length - 1].hours 
+      : initialHours;
+
+    chartPoints.push({
+      timestamp: maxTime,
+      rawDuration: 0,
+      hours: finalHours,
+      bookTitle: "Present Day",
+      author: "",
+      isBoundary: true,
+      dateStr: format(new Date(maxTime), "MMM d, yyyy"),
+      shortDate: format(new Date(maxTime), "MM/dd"),
+    });
+
+    return { chartData: chartPoints, minTime, maxTime };
   }, [books, chartTimeframe]);
 
   const handleHeaderClick = (field: 'title' | 'author' | 'addedAt') => {
@@ -406,7 +476,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                 </div>
               </div>
             </div>
-          ) : processedChartData.length === 0 ? (
+          ) : chartData.length === 0 ? (
             <div className="h-[240px] w-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/20 dark:bg-slate-900/10">
               <AlertCircle size={20} className="text-slate-400 dark:text-slate-500" />
               <div className="text-center">
@@ -417,7 +487,7 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
           ) : (
             <div className="h-[240px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={processedChartData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#6366f1" stopOpacity={isDark ? 0.35 : 0.2}/>
@@ -426,7 +496,10 @@ export function LibraryView({ books: initialBooks, libraries, isDark = false }: 
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#f1f5f9"} />
                   <XAxis 
-                    dataKey="shortDate" 
+                    type="number"
+                    dataKey="timestamp"
+                    domain={[minTime, maxTime]}
+                    tickFormatter={getTickFormatter(chartTimeframe)}
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fontSize: 9, fill: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 }} 
