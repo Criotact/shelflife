@@ -7,6 +7,7 @@ COPY package*.json tsconfig.json vite.config.ts index.html ./
 RUN npm ci
 
 # Copy source files and build
+COPY assets/ ./assets
 COPY src/ ./src
 RUN npm run build
 
